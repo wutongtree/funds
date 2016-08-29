@@ -8,7 +8,7 @@ site_dir: docs
 
 pages:
 - 首页: index.md
-- 需求分析: requirements.md
+- 功能描述: requirements.md
 - 设计实现: designs.md
 - 安装部署: deploy.md
  
