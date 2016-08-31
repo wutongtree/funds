@@ -39,10 +39,22 @@ Hyperledger：基金管理系统底层区块链技术实现，提供memberSrv服
 7. 用户基金信息：账户证书、基金序号、所购基金份额
 8. 排队信息：交易者证书、基金序号、交易额（认购或赎回）、申请时间
 
+以上数据结构对应的数据都通过chaincode操作并保存在block的worldstate里。另外，系统账户的注册由Hyperledger的membersrv服务实现。
+
 ####系统流程
 
-![交易流程](../img/交易流程.jpg)
+如下图流程图内所展示的逻辑是在chaincode实现。
 
+![流程](../img/流程.jpg)
 
+###APP接口设计
 
+App模块为web client提供REST API。
 
+#### 账户注册API
+
+#### 基金设置API
+
+#### 基金交易API
+
+#### 历史数据API
