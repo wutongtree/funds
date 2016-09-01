@@ -18,7 +18,7 @@ Hyperledger的membersrvc模块提供了基本的用户管理功能，基于PKI�
 
 架构设计包含三大部分：web client、App、Hyperledger。如下图
 
-![fund架构图](../img/fund架构图.jpg)
+![fund架构图](./images/architecture.jpg)
 
 web client：提供对外操作UI，实现user的输入输出简单处理后向App发送http request并接收response。
 
@@ -45,7 +45,7 @@ Hyperledger：基金管理系统底层区块链技术实现，提供memberSrv服
 
 如下图流程图内所展示的逻辑是在chaincode实现。
 
-![流程](../img/流程.jpg)
+![流程](./images/flowchart.jpg)
 
 ###APP接口设计
 
