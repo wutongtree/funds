@@ -30,9 +30,9 @@ Hyperledger：基金管理系统底层区块链技术实现，提供memberSrv服
 
 ####数据结构
 
-1. 基金基本信息：基金序号、基金名称
+1. 基金基本信息：基金序号、基金名称、管理员
 2. 基金净值：基金序号、净值
-3. 基金池：基金序号、基金池中份数
+3. 系统全局量：基金序号、基金池容量、基金池中剩余基金数、系统资金量
 4. 基金参与限制：基金序号、参与者资金量、参与者注册时间、认购起点
 5. 基金认购限制：基金序号、认购单量、认购总量
 6. 账户信息：账户证书、资金量、注册时间
@@ -53,15 +53,309 @@ App模块为web client提供REST API。
 
 #### 账户注册API
 
-
+* 账户注册接口 实现管理员用户与普通用户的注册
+* 用户登录
 
 #### 基金设置API
 
-
+* 创建基金  创建一只新基金，初始化其名称、净值、基金池、资金池以及参与限制和认购限制
+* 设置基金净值
+* 设置基金参与限制与认购限制
 
 #### 基金交易API
 
+* 管理员扩股
+* 管理员回购
+* 投资者认购
+* 投资者赎回
+
+#### 数据统计API
+
+* 基金净值历史记录
+* 查询基金信息
+* 基金池、资金池、交易队列状况
 
 
-#### 历史数据API
+###Hyperledger API
 
+#### 初始化
+
+Deploy Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "deploy",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、init；
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Deploy Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 创建基金
+
+Invoke Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "invoke",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“createFund“ 2、基金名称string  3、基金管理员  4、基金净值 5、基金池 6、系统资金
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Invoke Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 设置基金净值
+
+Invoke Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "invoke",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“setNet“ 2、基金ID  3、净值int 4、请求者
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Invoke Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 设置基金池（扩股、回购）
+
+Invoke Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "invoke",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“setFoundPool“ 2、基金ID  3、扩股/回购数（>0为扩股 <0为回购） 4、请求者
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Invoke Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 基金交易（认购赎回）
+
+Invoke Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "invoke",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“transferFound“ 2、基金ID  3、认购/赎回数（>0为认购 <0为赎回） 4、请求者
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Invoke Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx" //如果交易成功则为交易额（可能是部分交易完成），否则为错误信息
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 基金限制设置
+
+Invoke Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "invoke",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“setFundLimit“ 2、基金ID  3、参与者资金量 4、参与者注册时间 5、认购起点 6、认购单量 7、认购总量 8、请求者
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Invoke Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx" //如果交易成功则为交易额（可能是部分交易完成），否则为错误信息
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
