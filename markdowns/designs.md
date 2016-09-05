@@ -359,3 +359,97 @@ Invoke Response:
     }
 }
 ```
+
+#### 基金/列表信息查询
+
+Query Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "query",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“getFund“ 2、one/list 3、基金ID（第二个参数为one时需要此参数） 
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Query Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx" //基金信息（包括所有基本信息的struct）
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+#### 基金净值/列表查询
+
+Query Request:
+
+```
+POST host:port/chaincode
+{
+    "jsonrpc": "2.0",
+    "method": "query",
+    "params": {
+        "type": "GOLANG",
+        "chaincodeID": {
+            "path": "",
+            "name": ""
+        },
+        "ctorMsg": {
+            "args": "[][]byte{}"//参数 1、“getFundList“ 2、one/list  3、基金ID
+        },
+        "timeout": 0,
+        "secureContext": "string",
+        "confidentialityLevel": 1,
+        "metadata": "[]byte {}",
+        "attributes": "[]string{}"
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
+
+Query Response:
+
+```
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "status": "ok",
+        "message": "xxxx" //基金净值信息
+    },
+    "id": {
+        "StringValue": "*string",
+        "IntValue": "*int64"
+    }
+}
+```
