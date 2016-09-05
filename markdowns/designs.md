@@ -453,3 +453,25 @@ Query Response:
     }
 }
 ```
+
+#### 注册
+
+Enrollment Request:
+
+```
+POST host:port/registrar
+
+{
+  "enrollId": "lukas",
+  "enrollSecret": "NPKYL39uKbkj"
+}
+
+```
+
+Enrollment Response:
+
+```
+{
+    "OK": "Login successful for user 'lukas'."
+}
+```
