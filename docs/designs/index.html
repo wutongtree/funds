@@ -110,6 +110,8 @@
         
             <li><a href="#app">APP接口设计</a></li>
         
+            <li><a href="#hyperledger-api">Hyperledger API</a></li>
+        
     
     </ul>
 </div></div>
@@ -138,9 +140,9 @@
 <h3 id="_3">数据结构及流程</h3>
 <h4 id="_4">数据结构</h4>
 <ol>
-<li>基金基本信息：基金序号、基金名称</li>
+<li>基金基本信息：基金序号、基金名称、管理员</li>
 <li>基金净值：基金序号、净值</li>
-<li>基金池：基金序号、基金池中份数</li>
+<li>系统全局量：基金序号、基金池容量、基金池中剩余基金数、系统资金量</li>
 <li>基金参与限制：基金序号、参与者资金量、参与者注册时间、认购起点</li>
 <li>基金认购限制：基金序号、认购单量、认购总量</li>
 <li>账户信息：账户证书、资金量、注册时间</li>
@@ -154,9 +156,382 @@
 <h3 id="app">APP接口设计</h3>
 <p>App模块为web client提供REST API。</p>
 <h4 id="api">账户注册API</h4>
+<ul>
+<li>账户注册接口 实现管理员用户与普通用户的注册</li>
+<li>用户登录</li>
+</ul>
 <h4 id="api_1">基金设置API</h4>
+<ul>
+<li>创建基金  创建一只新基金，初始化其名称、净值、基金池、资金池以及参与限制和认购限制</li>
+<li>设置基金净值</li>
+<li>设置基金参与限制与认购限制</li>
+</ul>
 <h4 id="api_2">基金交易API</h4>
-<h4 id="api_3">历史数据API</h4></div>
+<ul>
+<li>管理员扩股</li>
+<li>管理员回购</li>
+<li>投资者认购</li>
+<li>投资者赎回</li>
+</ul>
+<h4 id="api_3">数据统计API</h4>
+<ul>
+<li>基金净值历史记录</li>
+<li>查询基金信息</li>
+<li>基金池、资金池、交易队列状况</li>
+</ul>
+<h3 id="hyperledger-api">Hyperledger API</h3>
+<h4 id="_6">初始化</h4>
+<p>Deploy Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;deploy&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、init；
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Deploy Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_7">创建基金</h4>
+<p>Invoke Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;invoke&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“createFund“ 2、基金名称string  3、基金管理员  4、基金净值 5、基金池 6、系统资金
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Invoke Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_8">设置基金净值</h4>
+<p>Invoke Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;invoke&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“setNet“ 2、基金ID  3、净值int 4、请求者
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Invoke Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_9">设置基金池（扩股、回购）</h4>
+<p>Invoke Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;invoke&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“setFoundPool“ 2、基金ID  3、扩股/回购数（&gt;0为扩股 &lt;0为回购） 4、请求者
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Invoke Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_10">基金交易（认购赎回）</h4>
+<p>Invoke Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;invoke&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“transferFound“ 2、基金ID  3、认购/赎回数（&gt;0为认购 &lt;0为赎回） 4、请求者
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Invoke Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot; //如果交易成功则为交易额（可能是部分交易完成），否则为错误信息
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_11">基金限制设置</h4>
+<p>Invoke Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;invoke&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“setFundLimit“ 2、基金ID  3、参与者资金量 4、参与者注册时间 5、认购起点 6、认购单量 7、认购总量 8、请求者
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Invoke Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot; //如果交易成功则为交易额（可能是部分交易完成），否则为错误信息
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_12">基金/列表信息查询</h4>
+<p>Query Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;query&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“getFund“ 2、one/list 3、基金ID（第二个参数为one时需要此参数） 
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Query Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot; //基金信息（包括所有基本信息的struct）
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_13">基金净值/列表查询</h4>
+<p>Query Request:</p>
+<pre><code>POST host:port/chaincode
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;query&quot;,
+    &quot;params&quot;: {
+        &quot;type&quot;: &quot;GOLANG&quot;,
+        &quot;chaincodeID&quot;: {
+            &quot;path&quot;: &quot;&quot;,
+            &quot;name&quot;: &quot;&quot;
+        },
+        &quot;ctorMsg&quot;: {
+            &quot;args&quot;: &quot;[][]byte{}&quot;//参数 1、“getFundList“ 2、one/list  3、基金ID
+        },
+        &quot;timeout&quot;: 0,
+        &quot;secureContext&quot;: &quot;string&quot;,
+        &quot;confidentialityLevel&quot;: 1,
+        &quot;metadata&quot;: &quot;[]byte {}&quot;,
+        &quot;attributes&quot;: &quot;[]string{}&quot;
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<p>Query Response:</p>
+<pre><code>{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;status&quot;: &quot;ok&quot;,
+        &quot;message&quot;: &quot;xxxx&quot; //基金净值信息
+    },
+    &quot;id&quot;: {
+        &quot;StringValue&quot;: &quot;*string&quot;,
+        &quot;IntValue&quot;: &quot;*int64&quot;
+    }
+}
+</code></pre>
+
+<h4 id="_14">注册</h4>
+<p>Enrollment Request:</p>
+<pre><code>POST host:port/registrar
+
+{
+  &quot;enrollId&quot;: &quot;lukas&quot;,
+  &quot;enrollSecret&quot;: &quot;NPKYL39uKbkj&quot;
+}
+
+</code></pre>
+
+<p>Enrollment Response:</p>
+<pre><code>{
+    &quot;OK&quot;: &quot;Login successful for user 'lukas'.&quot;
+}
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">
