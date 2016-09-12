@@ -94,7 +94,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、init；
+            "args": "[][]byte{}"//参数 init
         },
         "timeout": 0,
         "secureContext": "string",
@@ -141,7 +141,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、“createFund“ 2、基金名称string  3、基金管理员  4、基金净值 5、基金池 6、系统资金
+            "args": "[][]byte{}"//参数 1、“createFund“ 2、基金名称string  3、基金管理员  4、基金净值 5、基金池 6、系统资金 7、参与者资金量 8、参与者注册时间 9、认购起点 10、认购单量 11、认购总量 12、基金净值
         },
         "timeout": 0,
         "secureContext": "string",
@@ -188,7 +188,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、“setNet“ 2、基金ID  3、净值int 4、请求者
+            "args": "[][]byte{}"//参数 1、“setNet“ 2、基金名  3、净值int
         },
         "timeout": 0,
         "secureContext": "string",
@@ -235,7 +235,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、“setFoundPool“ 2、基金ID  3、扩股/回购数（>0为扩股 <0为回购） 4、请求者
+            "args": "[][]byte{}"//参数 1、“setFoundPool“ 2、基金名  3、扩股/回购数（>0为扩股 <0为回购）
         },
         "timeout": 0,
         "secureContext": "string",
@@ -282,7 +282,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、“transferFound“ 2、基金ID  3、认购/赎回数（>0为认购 <0为赎回） 4、请求者
+            "args": "[][]byte{}"//参数 1、“transferFound“ 2、基金ID  3、认购/赎回数（>0为认购 <0为赎回）
         },
         "timeout": 0,
         "secureContext": "string",
@@ -329,7 +329,7 @@ POST host:port/chaincode
             "name": ""
         },
         "ctorMsg": {
-            "args": "[][]byte{}"//参数 1、“setFundLimit“ 2、基金ID  3、参与者资金量 4、参与者注册时间 5、认购起点 6、认购单量 7、认购总量 8、请求者
+            "args": "[][]byte{}"//参数 1、“setFundLimit“ 2、基金名  3、参与者资金量 4、参与者注册时间 5、认购起点 6、认购单量 7、认购总量 
         },
         "timeout": 0,
         "secureContext": "string",
