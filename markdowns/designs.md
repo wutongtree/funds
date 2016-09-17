@@ -51,29 +51,206 @@ Hyperledger：基金管理系统底层区块链技术实现，提供memberSrv服
 
 App模块为web client提供REST API。
 
-#### 账户注册API
+#### 创建基金
 
-* 账户注册接口 实现管理员用户与普通用户的注册
-* 用户登录
+Request：
 
-#### 基金设置API
+```
+POST host:port/create
+{
+	"name": "fundName",//基金名称
+	"funds": 100,//初始基金数
+	"assets": 100,//初始资金数
+	"partnerAssets": 100,//注册资金
+	"partnerTime": 100,//注册时间
+	"buyStart": 100,//入购起点
+	"buyPer": 100,//限购单量
+	"buyAll": 100,//限购总量
+	"net": 100//基金净值
+}
+```
 
-* 创建基金  创建一只新基金，初始化其名称、净值、基金池、资金池以及参与限制和认购限制
-* 设置基金净值
-* 设置基金参与限制与认购限制
+Response:
 
-#### 基金交易API
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
 
-* 管理员扩股
-* 管理员回购
-* 投资者认购
-* 投资者赎回
+#### 设置基金净值
 
-#### 数据统计API
+Request：
 
-* 基金净值历史记录
-* 查询基金信息
-* 基金池、资金池、交易队列状况
+```
+POST host:port/setnet
+{
+	"name": "fundName",//基金名称
+	"net": 100//基金净值
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
+
+
+#### 设置基金限制
+
+Request：
+
+```
+POST host:port/setLimit
+{
+	"name": "fundName",//基金名称
+	"partnerAssets": 100,//注册资金
+	"partnerTime": 100,//注册时间
+	"buyStart": 100,//入购起点
+	"buyPer": 100,//限购单量
+	"buyAll": 100,//限购总量
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
+
+
+#### 扩股回购
+
+Request：
+
+```
+POST host:port/setPool
+{
+	"name": "fundName",//基金名称
+	"funds": 100,//初始基金数
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
+
+
+#### 认购赎回
+
+Request：
+
+```
+POST host:port/transfer
+{
+	"name": "fundName",//基金名称
+	"assets": 100,//初始资金数
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
+
+#### 根据基金名称查询基金信息
+
+Request：
+
+```
+GET host:port/getFund
+{
+	"name": "fundName",//基金名称
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "{
+				"name": "fundName",//基金名称
+				"funds": 100,//初始基金数
+				"assets": 100,//初始资金数
+				"partnerAssets": 100,//注册资金
+				"partnerTime": 100,//注册时间
+				"buyStart": 100,//入购起点
+				"buyPer": 100,//限购单量
+				"buyAll": 100,//限购总量
+				"net": 100//基金净值
+			}"//或错误信息
+}
+```
+
+
+#### 查询所有基金信息
+
+Request：
+
+```
+GET host:port/getFundList
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "[{
+				"name": "fundName",//基金名称
+				"funds": 100,//初始基金数
+				"assets": 100,//初始资金数
+				"partnerAssets": 100,//注册资金
+				"partnerTime": 100,//注册时间
+				"buyStart": 100,//入购起点
+				"buyPer": 100,//限购单量
+				"buyAll": 100,//限购总量
+				"net": 100//基金净值
+			}]"//或错误信息
+}
+```
+
+#### 查询用户某一基金的信息
+Request：
+
+```
+GET host:port/getUser
+{
+	"name": "fundName",//基金名称
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "{
+				"name": "fundName",//基金名称
+				"owner": 100,//用户证书
+				"assets": 100,//资金数
+				"fund": 100,//基金数
+			}"//或错误信息
+}
+```
 
 
 ###Hyperledger API

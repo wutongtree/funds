@@ -155,32 +155,166 @@
 <p><img alt="流程" src="../images/flowchart.jpg" /></p>
 <h3 id="app">APP接口设计</h3>
 <p>App模块为web client提供REST API。</p>
-<h4 id="api">账户注册API</h4>
-<ul>
-<li>账户注册接口 实现管理员用户与普通用户的注册</li>
-<li>用户登录</li>
-</ul>
-<h4 id="api_1">基金设置API</h4>
-<ul>
-<li>创建基金  创建一只新基金，初始化其名称、净值、基金池、资金池以及参与限制和认购限制</li>
-<li>设置基金净值</li>
-<li>设置基金参与限制与认购限制</li>
-</ul>
-<h4 id="api_2">基金交易API</h4>
-<ul>
-<li>管理员扩股</li>
-<li>管理员回购</li>
-<li>投资者认购</li>
-<li>投资者赎回</li>
-</ul>
-<h4 id="api_3">数据统计API</h4>
-<ul>
-<li>基金净值历史记录</li>
-<li>查询基金信息</li>
-<li>基金池、资金池、交易队列状况</li>
-</ul>
+<h4 id="_6">创建基金</h4>
+<p>Request：</p>
+<pre><code>POST host:port/create
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+    &quot;funds&quot;: 100,//初始基金数
+    &quot;assets&quot;: 100,//初始资金数
+    &quot;partnerAssets&quot;: 100,//注册资金
+    &quot;partnerTime&quot;: 100,//注册时间
+    &quot;buyStart&quot;: 100,//入购起点
+    &quot;buyPer&quot;: 100,//限购单量
+    &quot;buyAll&quot;: 100,//限购总量
+    &quot;net&quot;: 100//基金净值
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;xxx&quot;//错误信息
+}
+</code></pre>
+
+<h4 id="_7">设置基金净值</h4>
+<p>Request：</p>
+<pre><code>POST host:port/setnet
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+    &quot;net&quot;: 100//基金净值
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;xxx&quot;//错误信息
+}
+</code></pre>
+
+<h4 id="_8">设置基金限制</h4>
+<p>Request：</p>
+<pre><code>POST host:port/setLimit
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+    &quot;partnerAssets&quot;: 100,//注册资金
+    &quot;partnerTime&quot;: 100,//注册时间
+    &quot;buyStart&quot;: 100,//入购起点
+    &quot;buyPer&quot;: 100,//限购单量
+    &quot;buyAll&quot;: 100,//限购总量
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;xxx&quot;//错误信息
+}
+</code></pre>
+
+<h4 id="_9">扩股回购</h4>
+<p>Request：</p>
+<pre><code>POST host:port/setPool
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+    &quot;funds&quot;: 100,//初始基金数
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;xxx&quot;//错误信息
+}
+</code></pre>
+
+<h4 id="_10">认购赎回</h4>
+<p>Request：</p>
+<pre><code>POST host:port/transfer
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+    &quot;assets&quot;: 100,//初始资金数
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;xxx&quot;//错误信息
+}
+</code></pre>
+
+<h4 id="_11">根据基金名称查询基金信息</h4>
+<p>Request：</p>
+<pre><code>GET host:port/getFund
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;{
+                &quot;name&quot;: &quot;fundName&quot;,//基金名称
+                &quot;funds&quot;: 100,//初始基金数
+                &quot;assets&quot;: 100,//初始资金数
+                &quot;partnerAssets&quot;: 100,//注册资金
+                &quot;partnerTime&quot;: 100,//注册时间
+                &quot;buyStart&quot;: 100,//入购起点
+                &quot;buyPer&quot;: 100,//限购单量
+                &quot;buyAll&quot;: 100,//限购总量
+                &quot;net&quot;: 100//基金净值
+            }&quot;//或错误信息
+}
+</code></pre>
+
+<h4 id="_12">查询所有基金信息</h4>
+<p>Request：</p>
+<pre><code>GET host:port/getFundList
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;[{
+                &quot;name&quot;: &quot;fundName&quot;,//基金名称
+                &quot;funds&quot;: 100,//初始基金数
+                &quot;assets&quot;: 100,//初始资金数
+                &quot;partnerAssets&quot;: 100,//注册资金
+                &quot;partnerTime&quot;: 100,//注册时间
+                &quot;buyStart&quot;: 100,//入购起点
+                &quot;buyPer&quot;: 100,//限购单量
+                &quot;buyAll&quot;: 100,//限购总量
+                &quot;net&quot;: 100//基金净值
+            }]&quot;//或错误信息
+}
+</code></pre>
+
+<h4 id="_13">查询用户某一基金的信息</h4>
+<p>Request：</p>
+<pre><code>GET host:port/getUser
+{
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
+}
+</code></pre>
+
+<p>Response:</p>
+<pre><code>{
+    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
+    &quot;msg&quot;: &quot;{
+                &quot;name&quot;: &quot;fundName&quot;,//基金名称
+                &quot;owner&quot;: 100,//用户证书
+                &quot;assets&quot;: 100,//资金数
+                &quot;fund&quot;: 100,//基金数
+            }&quot;//或错误信息
+}
+</code></pre>
+
 <h3 id="hyperledger-api">Hyperledger API</h3>
-<h4 id="_6">初始化</h4>
+<h4 id="_14">初始化</h4>
 <p>Deploy Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -222,7 +356,7 @@
 }
 </code></pre>
 
-<h4 id="_7">创建基金</h4>
+<h4 id="_15">创建基金</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -264,7 +398,7 @@
 }
 </code></pre>
 
-<h4 id="_8">设置基金净值</h4>
+<h4 id="_16">设置基金净值</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -306,7 +440,7 @@
 }
 </code></pre>
 
-<h4 id="_9">设置基金池（扩股、回购）</h4>
+<h4 id="_17">设置基金池（扩股、回购）</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -348,7 +482,7 @@
 }
 </code></pre>
 
-<h4 id="_10">基金交易（认购赎回）</h4>
+<h4 id="_18">基金交易（认购赎回）</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -390,7 +524,7 @@
 }
 </code></pre>
 
-<h4 id="_11">基金限制设置</h4>
+<h4 id="_19">基金限制设置</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -432,7 +566,7 @@
 }
 </code></pre>
 
-<h4 id="_12">基金/列表信息查询</h4>
+<h4 id="_20">基金/列表信息查询</h4>
 <p>Query Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -474,7 +608,7 @@
 }
 </code></pre>
 
-<h4 id="_13">基金净值/列表查询</h4>
+<h4 id="_21">基金净值/列表查询</h4>
 <p>Query Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -516,7 +650,7 @@
 }
 </code></pre>
 
-<h4 id="_14">注册</h4>
+<h4 id="_22">注册</h4>
 <p>Enrollment Request:</p>
 <pre><code>POST host:port/registrar
 
