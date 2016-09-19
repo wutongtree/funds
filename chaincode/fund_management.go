@@ -329,10 +329,10 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	fundName := args[0]
 	fundNet, err := strconv.ParseInt(args[1], 10, 64)
