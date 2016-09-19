@@ -56,17 +56,17 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 	myLogger.Debug("Invoke Chaincode......")
 
 	// Handle different functions
-	if function == "create" {
-		return t.createFund(stub, args)
-	} else if function == "setFundNet" {
-		return t.setFundNet(stub, args)
-	} else if function == "setFundLimit" {
-		return t.setFundLimit(stub, args)
-	} else if function == "setFoundPool" {
-		return t.setFoundPool(stub, args)
-	} else if function == "transferFound" {
-		return t.transferFound(stub, args)
-	}
+	// if function == "create" {
+	// 	return t.createFund(stub, args)
+	// } else if function == "setFundNet" {
+	// 	return t.setFundNet(stub, args)
+	// } else if function == "setFundLimit" {
+	// 	return t.setFundLimit(stub, args)
+	// } else if function == "setFoundPool" {
+	// 	return t.setFoundPool(stub, args)
+	// } else if function == "transferFound" {
+	// 	return t.transferFound(stub, args)
+	// }
 
 	return nil, errors.New(function)
 }
