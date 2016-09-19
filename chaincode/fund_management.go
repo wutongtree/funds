@@ -56,21 +56,21 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 // Invoke will be called for every transaction.
 func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Invoke Chaincode......")
-
+	function, args, _ = dealParam(function, args)
+	myLogger.Debug(function, strings.Join(args, ","))
 	// Handle different functions
-	// if function == "create" {
-	// 	return t.createFund(stub, args)
-	// } else if function == "setFundNet" {
-	// 	return t.setFundNet(stub, args)
-	// } else if function == "setFundLimit" {
-	// 	return t.setFundLimit(stub, args)
-	// } else if function == "setFoundPool" {
-	// 	return t.setFoundPool(stub, args)
-	// } else if function == "transferFound" {
-	// 	return t.transferFound(stub, args)
-	// }
-	xxx, _ := base64.StdEncoding.DecodeString(function)
-	return nil, errors.New(function + "   " + strings.Join(args, ",") + "   " + string(xxx))
+	if function == "create" {
+		return t.createFund(stub, args)
+	} else if function == "setFundNet" {
+		return t.setFundNet(stub, args)
+	} else if function == "setFundLimit" {
+		return t.setFundLimit(stub, args)
+	} else if function == "setFoundPool" {
+		return t.setFoundPool(stub, args)
+	} else if function == "transferFound" {
+		return t.transferFound(stub, args)
+	}
+	return nil, errors.New("Received unknown function invocation")
 }
 
 // Query callback representing the query of a chaincode
@@ -85,6 +85,22 @@ func (t *FundManagementChaincode) Query(stub shim.ChaincodeStubInterface, functi
 	}
 
 	return nil, errors.New("Received unknown function query")
+}
+
+func dealParam(function string, args []string) (string, []string, error) {
+	function_b, err := base64.StdEncoding.DecodeString(function)
+	if err != nil {
+		return "", nil, err
+	}
+	for k, v := range args {
+		arg_b, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return "", nil, err
+		}
+		args[k] = string(arg_b)
+	}
+
+	return string(function_b), args, nil
 }
 
 func createTable(stub shim.ChaincodeStubInterface) error {
