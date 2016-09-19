@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/crypto/primitives"
@@ -22,6 +21,8 @@ type FundManagementChaincode struct {
 // The deploy transaction metadata is supposed to contain the administrator cert
 func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Init Chaincode......")
+	function, args, _ = dealParam(function, args)
+
 	if len(args) != 0 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 0")
 	}
@@ -57,7 +58,7 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Invoke Chaincode......")
 	function, args, _ = dealParam(function, args)
-	myLogger.Debug(function, strings.Join(args, ","))
+
 	// Handle different functions
 	if function == "create" {
 		return t.createFund(stub, args)
@@ -77,6 +78,7 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 // Anyone can invoke this function.
 func (t *FundManagementChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Query Chaincode....")
+	function, args, _ = dealParam(function, args)
 
 	if function == "queryFundInfo" {
 		return t.queryFundInfo(stub, args)
@@ -241,8 +243,8 @@ func (t *FundManagementChaincode) isCaller(stub shim.ChaincodeStubInterface, cer
 func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("createFund......")
 
-	if len(args) != 10 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 10")
+	if len(args) != 9 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 9")
 	}
 
 	// ok, err := t.isAdmin(stub)
