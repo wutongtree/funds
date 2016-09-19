@@ -68,7 +68,7 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 		return t.transferFound(stub, args)
 	}
 
-	return nil, errors.New("Received unknown function invocation")
+	return nil, errors.New(function)
 }
 
 // Query callback representing the query of a chaincode
