@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,8 +69,8 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 	// } else if function == "transferFound" {
 	// 	return t.transferFound(stub, args)
 	// }
-
-	return nil, errors.New(function + "   " + strings.Join(args, ","))
+	xx := base64.StdEncoding.EncodeToString([]byte(function))
+	return nil, errors.New(function + "   " + strings.Join(args, ",") + "     " + xx)
 }
 
 // Query callback representing the query of a chaincode
