@@ -32,19 +32,19 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 
 	//set the admin
 	// the  metadata will contain the certificate of the administrator
-	adminCert, err := stub.GetCallerMetadata()
-	if err != nil {
-		myLogger.Debug("Failed getting metadata")
-		return nil, errors.New("Failed getting metadata.")
-	}
-	if len(adminCert) == 0 {
-		myLogger.Debug("Invalid admin certificate. Empty.")
-		return nil, errors.New("Invalid admin certificate. Empty.")
-	}
+	// adminCert, err := stub.GetCallerMetadata()
+	// if err != nil {
+	// 	myLogger.Debug("Failed getting metadata")
+	// 	return nil, errors.New("Failed getting metadata.")
+	// }
+	// if len(adminCert) == 0 {
+	// 	myLogger.Debug("Invalid admin certificate. Empty.")
+	// 	return nil, errors.New("Invalid admin certificate. Empty.")
+	// }
 
-	myLogger.Debug("The administrator is [%x]", adminCert)
+	// myLogger.Debug("The administrator is [%x]", adminCert)
 
-	stub.PutState("admin", adminCert)
+	// stub.PutState("admin", adminCert)
 
 	myLogger.Debug("Init Chaincode...done")
 
@@ -227,10 +227,10 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 10")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	name := args[0]
 	// admin, err := base64.StdEncoding.DecodeString(args[1])
@@ -275,7 +275,7 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("fund net is not int64")
 	}
 
-	ok, err = stub.InsertRow("FundInfo", shim.Row{
+	ok, err := stub.InsertRow("FundInfo", shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: name}},
 			// &shim.Column{Value: &shim.Column_Bytes{Bytes: admin}},
