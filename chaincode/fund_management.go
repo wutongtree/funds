@@ -310,19 +310,12 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 			&shim.Column{Value: &shim.Column_Int64{Int64: net}}},
 	})
 	if !ok && err == nil {
-		return nil, errors.New(strconv.FormatBool(ok))
+		return nil, errors.New("the fund info was already existed")
 	}
 
-	// ok, err = stub.InsertRow("FundNet", shim.Row{
-	// 	Columns: []*shim.Column{
-	// 		&shim.Column{Value: &shim.Column_String_{String_: name}},
-	// 		&shim.Column{Value: &shim.Column_Int64{Int64: net}}},
-	// 	// &shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix()}}},
-	// })
-
-	// if !ok && err == nil {
-	// 	return nil, errors.New("insert fundent failed")
-	// }
+	if err != nil {
+		return nil, errors.New("insert fund info failed:" + err.Error())
+	}
 
 	myLogger.Debug("createFund done.")
 	return nil, nil
