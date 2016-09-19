@@ -69,8 +69,8 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 	// } else if function == "transferFound" {
 	// 	return t.transferFound(stub, args)
 	// }
-	xx := base64.StdEncoding.EncodeToString([]byte(function))
-	return nil, errors.New(function + "   " + strings.Join(args, ",") + "     " + xx)
+	xxx, _ := base64.StdEncoding.DecodeString(function)
+	return nil, errors.New(function + "   " + strings.Join(args, ",") + "   " + string(xxx))
 }
 
 // Query callback representing the query of a chaincode
