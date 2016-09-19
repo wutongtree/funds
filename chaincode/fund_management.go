@@ -435,7 +435,7 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 		return nil, err
 	}
 
-	funds := row.Columns[2].GetInt64() + fundCount
+	funds := row.Columns[1].GetInt64() + fundCount
 	if funds < 0 {
 		//回购不足
 		return nil, errors.New("回购失败，可回购数不足")
