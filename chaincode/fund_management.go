@@ -56,7 +56,7 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 	myLogger.Debug("Invoke Chaincode......")
 
 	// Handle different functions
-	if function == "createFund" {
+	if function == "create" {
 		return t.createFund(stub, args)
 	} else if function == "setFundNet" {
 		return t.setFundNet(stub, args)
