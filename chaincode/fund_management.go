@@ -348,8 +348,8 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 	row.Columns[8].Value = &shim.Column_Int64{Int64: fundNet}
 
 	_, err = stub.ReplaceRow("FundInfo", *row)
-	if err == nil {
-		return nil, errors.New("update fundent failed")
+	if err != nil {
+		return nil, errors.New("update fundent failed:" + err.Error())
 	}
 
 	myLogger.Debug("setFundNetc done.")
