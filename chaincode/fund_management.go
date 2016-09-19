@@ -584,8 +584,8 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []b
 func (t *FundManagementChaincode) queryFundInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("query fund info....")
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	if len(args) < 1 {
+		return nil, errors.New("Incorrect number of arguments. ")
 	}
 
 	queryType := args[0]
