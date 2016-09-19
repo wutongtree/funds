@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/crypto/primitives"
@@ -68,7 +69,7 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 	// 	return t.transferFound(stub, args)
 	// }
 
-	return nil, errors.New(function)
+	return nil, errors.New(function + "   " + strings.Join(args, ","))
 }
 
 // Query callback representing the query of a chaincode
