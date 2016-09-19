@@ -310,7 +310,7 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 			&shim.Column{Value: &shim.Column_Int64{Int64: net}}},
 	})
 	if !ok && err == nil {
-		return nil, errors.New("insert fundinfo failed")
+		return nil, errors.New(strconv.FormatBool(ok))
 	}
 
 	// ok, err = stub.InsertRow("FundNet", shim.Row{
