@@ -463,15 +463,15 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	}
 
 	fundName := args[0]
-	// fundCount, err := strconv.ParseInt(args[1], 10, 64)
-	// if err != nil {
-	// 	return nil, errors.New("Fund count is not int64")
-	// }
+	fundCount, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return nil, errors.New("Fund count is not int64")
+	}
 
-	// _, fundInfRow, err := getFundInfoByName(stub, fundName)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	_, fundInfRow, err := getFundInfoByName(stub, fundName)
+	if err != nil {
+		return nil, err
+	}
 
 	owner, err := stub.GetCallerCertificate()
 	if err != nil {
@@ -482,7 +482,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
 			&shim.Column{Value: &shim.Column_Bytes{Bytes: owner}},
-			&shim.Column{Value: &shim.Column_Int64{Int64: 0}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 10000}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
 	})
 	if err != nil {
@@ -490,44 +490,44 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("insert user info failed:%s", err)
 	}
 
-	_, _, err = getUserInfo(stub, fundName, owner)
+	_, userRow, err := getUserInfo(stub, fundName, owner)
 	if err != nil {
 		return nil, err
 	}
 
 	//验证限制是否满足
 
-	// sysFunds := fundInfRow.Columns[1].GetInt64() - fundCount
-	// sysAsset := fundInfRow.Columns[2].GetInt64() + fundCount*fundInfRow.Columns[8].GetInt64()
+	sysFunds := fundInfRow.Columns[1].GetInt64() - fundCount
+	sysAsset := fundInfRow.Columns[2].GetInt64() + fundCount*fundInfRow.Columns[8].GetInt64()
 
-	// userFunds := 0 //userRow.Columns[3].GetInt64() + fundCount
-	// userAsset := 0 //userRow.Columns[2].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
-	// if fundCount > 0 {
-	// 	//认购
-	// 	if sysFunds < 0 || userAsset < 0 {
-	// 		return nil, errors.New("认购失败，系统基金不租或者用户资金不足")
-	// 	}
-	// } else {
-	// 	if sysAsset < 0 || userFunds < 0 {
-	// 		return nil, errors.New("赎回失败，系统资金不足或者赎回数量超出用户基金数")
-	// 	}
-	// }
+	userFunds := userRow.Columns[3].GetInt64() + fundCount
+	userAsset := userRow.Columns[2].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
+	if fundCount > 0 {
+		//认购
+		if sysFunds < 0 || userAsset < 0 {
+			return nil, errors.New("认购失败，系统基金不租或者用户资金不足")
+		}
+	} else {
+		if sysAsset < 0 || userFunds < 0 {
+			return nil, errors.New("赎回失败，系统资金不足或者赎回数量超出用户基金数")
+		}
+	}
 
-	// fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
-	// fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
-	// _, err = stub.ReplaceRow("FundInfo", *fundInfRow)
-	// if err != nil {
-	// 	myLogger.Errorf("failed update fundinfo:%s", err)
-	// 	return nil, fmt.Errorf("failed update fundinfo:%s", err)
-	// }
+	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
+	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
+	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
+	if err != nil {
+		myLogger.Errorf("failed update fundinfo:%s", err)
+		return nil, fmt.Errorf("failed update fundinfo:%s", err)
+	}
 
-	// // userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
-	// // userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
-	// // _, err = stub.ReplaceRow("AccountFund", *userRow)
-	// // if err != nil {
-	// // 	myLogger.Errorf("failed update user fund info:%s", err)
-	// // 	return nil, fmt.Errorf("failed update user fund info:%s", err)
-	// // }
+	userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
+	userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
+	_, err = stub.ReplaceRow("AccountFund", *userRow)
+	if err != nil {
+		myLogger.Errorf("failed update user fund info:%s", err)
+		return nil, fmt.Errorf("failed update user fund info:%s", err)
+	}
 
 	myLogger.Debug("transferFund done.")
 	return nil, nil
