@@ -159,15 +159,15 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	}
 
 	// 5. 排队信息：交易者证书、基金名、交易额（+认购或-赎回）
-	err = stub.CreateTable("Queue", []*shim.ColumnDefinition{
-		&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_BYTES, Key: true},
-		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
-	})
-	if err != nil {
-		myLogger.Errorf("Failed creating Queue table: %s", err)
-		return fmt.Errorf("Failed creating Queue table: %s", err)
-	}
+	// err = stub.CreateTable("Queue", []*shim.ColumnDefinition{
+	// 	&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_BYTES, Key: true},
+	// 	&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
+	// 	&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
+	// })
+	// if err != nil {
+	// 	myLogger.Errorf("Failed creating Queue table: %s", err)
+	// 	return fmt.Errorf("Failed creating Queue table: %s", err)
+	// }
 
 	return nil
 }
@@ -567,24 +567,25 @@ type userInfo struct {
 }
 
 func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []byte) (*userInfo, *shim.Row, error) {
-	columns := []shim.Column{
-		shim.Column{Value: &shim.Column_String_{String_: fundName}},
-		shim.Column{Value: &shim.Column_Bytes{Bytes: userCert}},
-	}
+	// columns := []shim.Column{
+	// 	shim.Column{Value: &shim.Column_String_{String_: fundName}},
+	// 	shim.Column{Value: &shim.Column_Bytes{Bytes: userCert}},
+	// }
 
-	row, err := stub.GetRow("AccountFund", columns)
-	if err != nil {
-		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-		return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-	}
+	// row, err := stub.GetRow("AccountFund", columns)
+	// if err != nil {
+	// 	myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+	// 	return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+	// }
 
-	userInfo := new(userInfo)
-	userInfo.Name = row.Columns[0].GetString_()
-	userInfo.Owner = row.Columns[1].GetBytes()
-	userInfo.Assets = row.Columns[2].GetInt64()
-	userInfo.Fund = row.Columns[3].GetInt64()
+	// userInfo := new(userInfo)
+	// userInfo.Name = row.Columns[0].GetString_()
+	// userInfo.Owner = row.Columns[1].GetBytes()
+	// userInfo.Assets = row.Columns[2].GetInt64()
+	// userInfo.Fund = row.Columns[3].GetInt64()
 
-	return userInfo, &row, nil
+	// return userInfo, &row, nil
+	return nil, nil, nil
 }
 
 //查询基金信息
