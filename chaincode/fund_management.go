@@ -473,23 +473,23 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, err
 	}
 
-	owner, err := stub.GetCallerCertificate()
-	if err != nil {
-		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
-	}
+	// owner, err := stub.GetCallerCertificate()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("Get caller certificate failed:%s", err)
+	// }
 
-	_, userRow, err := getUserInfo(stub, fundName, owner)
-	if err != nil {
-		return nil, err
-	}
+	// _, userRow, err := getUserInfo(stub, fundName, owner)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	//验证限制是否满足
 
 	sysFunds := fundInfRow.Columns[1].GetInt64() - fundCount
 	sysAsset := fundInfRow.Columns[2].GetInt64() + fundCount*fundInfRow.Columns[8].GetInt64()
 
-	userFunds := userRow.Columns[3].GetInt64() + fundCount
-	userAsset := userRow.Columns[2].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
+	userFunds := 0 //userRow.Columns[3].GetInt64() + fundCount
+	userAsset := 0 //userRow.Columns[2].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
 	if fundCount > 0 {
 		//认购
 		if sysFunds < 0 || userAsset < 0 {
@@ -509,13 +509,13 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("failed update fundinfo:%s", err)
 	}
 
-	userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
-	userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
-	_, err = stub.ReplaceRow("AccountFund", *userRow)
-	if err != nil {
-		myLogger.Errorf("failed update user fund info:%s", err)
-		return nil, fmt.Errorf("failed update user fund info:%s", err)
-	}
+	// userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
+	// userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
+	// _, err = stub.ReplaceRow("AccountFund", *userRow)
+	// if err != nil {
+	// 	myLogger.Errorf("failed update user fund info:%s", err)
+	// 	return nil, fmt.Errorf("failed update user fund info:%s", err)
+	// }
 
 	myLogger.Debug("transferFund done.")
 	return nil, nil
