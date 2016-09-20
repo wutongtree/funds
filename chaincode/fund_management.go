@@ -478,6 +478,18 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
 	}
 
+	_, err = stub.InsertRow("AccountFund", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
+			&shim.Column{Value: &shim.Column_Bytes{Bytes: owner}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 0}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
+	})
+	if err != nil {
+		myLogger.Errorf("insert user info failed:%s", err)
+		return nil, fmt.Errorf("insert user info failed:%s", err)
+	}
+
 	_, _, err = getUserInfo(stub, fundName, owner)
 	if err != nil {
 		return nil, err
@@ -567,25 +579,24 @@ type userInfo struct {
 }
 
 func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []byte) (*userInfo, *shim.Row, error) {
-	// columns := []shim.Column{
-	// 	shim.Column{Value: &shim.Column_String_{String_: fundName}},
-	// 	shim.Column{Value: &shim.Column_Bytes{Bytes: userCert}},
-	// }
+	columns := []shim.Column{
+		shim.Column{Value: &shim.Column_String_{String_: fundName}},
+		shim.Column{Value: &shim.Column_Bytes{Bytes: userCert}},
+	}
 
-	// row, err := stub.GetRow("AccountFund", columns)
-	// if err != nil {
-	// 	myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-	// 	return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-	// }
+	row, err := stub.GetRow("AccountFund", columns)
+	if err != nil {
+		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+		return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+	}
 
-	// userInfo := new(userInfo)
-	// userInfo.Name = row.Columns[0].GetString_()
-	// userInfo.Owner = row.Columns[1].GetBytes()
-	// userInfo.Assets = row.Columns[2].GetInt64()
-	// userInfo.Fund = row.Columns[3].GetInt64()
+	userInfo := new(userInfo)
+	userInfo.Name = row.Columns[0].GetString_()
+	userInfo.Owner = row.Columns[1].GetBytes()
+	userInfo.Assets = row.Columns[2].GetInt64()
+	userInfo.Fund = row.Columns[3].GetInt64()
 
-	// return userInfo, &row, nil
-	return nil, nil, nil
+	return userInfo, &row, nil
 }
 
 //查询基金信息
