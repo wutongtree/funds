@@ -458,7 +458,7 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("transferFund.....")
 
-	if len(args) != 12 {
+	if len(args) != 2 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
