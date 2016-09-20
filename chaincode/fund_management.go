@@ -149,7 +149,7 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	// 4. 用户基金信息：账户证书、基金名、所购基金份额
 	err = stub.CreateTable("AccountFund", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_BYTES, Key: true},
+		&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "Fund", Type: shim.ColumnDefinition_INT64, Key: false},
 	})
@@ -462,8 +462,9 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	fundName := args[0]
-	fundCount, err := strconv.ParseInt(args[1], 10, 64)
+	owner := args[0]
+	fundName := args[1]
+	fundCount, err := strconv.ParseInt(args[2], 10, 64)
 	if err != nil {
 		return nil, errors.New("Fund count is not int64")
 	}
@@ -473,15 +474,10 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, err
 	}
 
-	owner, err := stub.GetCallerCertificate()
-	if err != nil {
-		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
-	}
-
 	_, err = stub.InsertRow("AccountFund", shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
-			&shim.Column{Value: &shim.Column_Bytes{Bytes: owner}},
+			&shim.Column{Value: &shim.Column_String_{String_: owner}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: 10000}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
 	})
@@ -573,15 +569,15 @@ func getFundInfoList(stub shim.ChaincodeStubInterface) ([]fundInfo, error) {
 
 type userInfo struct {
 	Name   string `json:"name,omitempty"`
-	Owner  []byte `json:"owner,omitempty"`
+	Owner  string `json:"owner,omitempty"`
 	Assets int64  `json:"assets,omitempty"`
 	Fund   int64  `json:"fund,omitempty"`
 }
 
-func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []byte) (*userInfo, *shim.Row, error) {
+func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*userInfo, *shim.Row, error) {
 	columns := []shim.Column{
 		shim.Column{Value: &shim.Column_String_{String_: fundName}},
-		shim.Column{Value: &shim.Column_Bytes{Bytes: userCert}},
+		shim.Column{Value: &shim.Column_String_{String_: userCert}},
 	}
 
 	row, err := stub.GetRow("AccountFund", columns)
@@ -592,7 +588,7 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []b
 
 	userInfo := new(userInfo)
 	userInfo.Name = row.Columns[0].GetString_()
-	userInfo.Owner = row.Columns[1].GetBytes()
+	userInfo.Owner = row.Columns[1].GetString_()
 	userInfo.Assets = row.Columns[2].GetInt64()
 	userInfo.Fund = row.Columns[3].GetInt64()
 
@@ -638,13 +634,8 @@ func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	user, err := stub.GetCallerCertificate()
-	if err != nil {
-		myLogger.Errorf("Get caller certificate failed:%s", err)
-		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
-	}
-
-	fundName := args[0]
+	user := args[0]
+	fundName := args[1]
 	info, _, err := getUserInfo(stub, fundName, user)
 	if err != nil {
 		return nil, err
