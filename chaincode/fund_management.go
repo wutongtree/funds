@@ -458,8 +458,8 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("transferFund.....")
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	if len(args) != 3 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 3")
 	}
 
 	owner := args[0]
@@ -630,8 +630,8 @@ func (t *FundManagementChaincode) queryFundInfo(stub shim.ChaincodeStubInterface
 func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("query user info....")
 
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
 	user := args[0]
