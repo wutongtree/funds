@@ -106,7 +106,7 @@ Response:
 Request：
 
 ```
-POST host:port/setLimit
+POST host:port/setlimit
 {
 	"name": "fundName",//基金名称
 	"partnerAssets": 100,//注册资金
@@ -132,10 +132,10 @@ Response:
 Request：
 
 ```
-POST host:port/setPool
+POST host:port/setpool
 {
 	"name": "fundName",//基金名称
-	"funds": 100,//初始基金数
+	"funds": 100,//扩股回购数，>0扩股  <0为回购
 }
 ```
 
@@ -157,7 +157,7 @@ Request：
 POST host:port/transfer
 {
 	"name": "fundName",//基金名称
-	"assets": 100,//初始资金数
+	"assets": 100,//认购赎回数，>0认购  <0为赎回
 }
 ```
 
@@ -175,10 +175,8 @@ Response:
 Request：
 
 ```
-GET host:port/getFund
-{
-	"name": "fundName",//基金名称
-}
+GET host:port/fund/:name
+
 ```
 
 Response:
@@ -200,42 +198,12 @@ Response:
 }
 ```
 
-
-#### 查询所有基金信息
-
-Request：
-
-```
-GET host:port/getFundList
-```
-
-Response:
-
-```
-{
-	"status": "OK",//或者"Err"
-	"msg": "[{
-				"name": "fundName",//基金名称
-				"funds": 100,//初始基金数
-				"assets": 100,//初始资金数
-				"partnerAssets": 100,//注册资金
-				"partnerTime": 100,//注册时间
-				"buyStart": 100,//入购起点
-				"buyPer": 100,//限购单量
-				"buyAll": 100,//限购总量
-				"net": 100//基金净值
-			}]"//或错误信息
-}
-```
-
 #### 查询用户某一基金的信息
 Request：
 
 ```
-GET host:port/getUser
-{
-	"name": "fundName",//基金名称
-}
+GET host:port/user/:name
+
 ```
 
 Response:

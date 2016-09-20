@@ -122,7 +122,7 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	})
 	if err != nil {
 		myLogger.Errorf("Failed creating FundInfo table: %s", err)
-		return errors.New("Failed creating FundInfo table.")
+		return fmt.Errorf("Failed creating FundInfo table: %s", err)
 	}
 
 	// 2. 基金净值：基金名、净值、时间(时间戳)
@@ -155,7 +155,7 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	})
 	if err != nil {
 		myLogger.Errorf("Failed creating AccountFund table: %s", err)
-		return errors.New("Failed creating AccountFund table.")
+		return fmt.Errorf("Failed creating AccountFund table: %s", err)
 	}
 
 	// 5. 排队信息：交易者证书、基金名、交易额（+认购或-赎回）
@@ -166,7 +166,7 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	})
 	if err != nil {
 		myLogger.Errorf("Failed creating Queue table: %s", err)
-		return errors.New("Failed creating Queue table.")
+		return fmt.Errorf("Failed creating Queue table: %s", err)
 	}
 
 	return nil
@@ -314,7 +314,8 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 	}
 
 	if err != nil {
-		return nil, errors.New("insert fund info failed:" + err.Error())
+		myLogger.Errorf("insert fund info failed:%s", err)
+		return nil, fmt.Errorf("insert fund info failed:%s", err)
 	}
 
 	myLogger.Debug("createFund done.")
@@ -349,7 +350,8 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 
 	_, err = stub.ReplaceRow("FundInfo", *row)
 	if err != nil {
-		return nil, errors.New("update fund net failed:" + err.Error())
+		myLogger.Errorf("update fund net failed:%s", err)
+		return nil, fmt.Errorf("update fund net failed:%s", err)
 	}
 
 	myLogger.Debug("setFundNetc done.")
@@ -444,7 +446,8 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 	row.Columns[1].Value = &shim.Column_Int64{Int64: funds}
 	_, err = stub.ReplaceRow("FundInfo", *row)
 	if err != nil {
-		return nil, errors.New("update fund pool failed:" + err.Error())
+		myLogger.Errorf("update fund pool failed:%s", err)
+		return nil, fmt.Errorf("update fund pool failed:%s", err)
 	}
 
 	myLogger.Debug("setFundPool done.")
@@ -472,7 +475,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 
 	owner, err := stub.GetCallerCertificate()
 	if err != nil {
-		return nil, errors.New("Get caller certificate failed")
+		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
 	}
 
 	_, userRow, err := getUserInfo(stub, fundName, owner)
@@ -502,14 +505,16 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
 	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
 	if err != nil {
-		return nil, errors.New("failed update fundinfo")
+		myLogger.Errorf("failed update fundinfo:%s", err)
+		return nil, fmt.Errorf("failed update fundinfo:%s", err)
 	}
 
 	userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
 	userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
 	_, err = stub.ReplaceRow("AccountFund", *userRow)
 	if err != nil {
-		return nil, errors.New("failed update user fund info")
+		myLogger.Errorf("failed update user fund info:%s", err)
+		return nil, fmt.Errorf("failed update user fund info:%s", err)
 	}
 
 	myLogger.Debug("transferFund done.")
@@ -532,6 +537,7 @@ func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fund
 	columns := []shim.Column{shim.Column{Value: &shim.Column_String_{String_: fundName}}}
 	row, err := stub.GetRow("FundInfo", columns)
 	if err != nil {
+		myLogger.Errorf("Failed retrieving fundInfo [%s]: [%s]", fundName, err)
 		return nil, nil, fmt.Errorf("Failed retrieving fundInfo [%s]: [%s]", fundName, err)
 	}
 
@@ -568,6 +574,7 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName string, userCert []b
 
 	row, err := stub.GetRow("AccountFund", columns)
 	if err != nil {
+		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
 		return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
 	}
 
@@ -621,7 +628,8 @@ func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface
 
 	user, err := stub.GetCallerCertificate()
 	if err != nil {
-		return nil, errors.New("Get caller certificate failed")
+		myLogger.Errorf("Get caller certificate failed:%s", err)
+		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
 	}
 
 	fundName := args[0]

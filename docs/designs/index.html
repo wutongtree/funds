@@ -196,7 +196,7 @@
 
 <h4 id="_8">设置基金限制</h4>
 <p>Request：</p>
-<pre><code>POST host:port/setLimit
+<pre><code>POST host:port/setlimit
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;partnerAssets&quot;: 100,//注册资金
@@ -216,10 +216,10 @@
 
 <h4 id="_9">扩股回购</h4>
 <p>Request：</p>
-<pre><code>POST host:port/setPool
+<pre><code>POST host:port/setpool
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
-    &quot;funds&quot;: 100,//初始基金数
+    &quot;funds&quot;: 100,//扩股回购数，&gt;0扩股  &lt;0为回购
 }
 </code></pre>
 
@@ -235,7 +235,7 @@
 <pre><code>POST host:port/transfer
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
-    &quot;assets&quot;: 100,//初始资金数
+    &quot;assets&quot;: 100,//认购赎回数，&gt;0认购  &lt;0为赎回
 }
 </code></pre>
 
@@ -248,10 +248,8 @@
 
 <h4 id="_11">根据基金名称查询基金信息</h4>
 <p>Request：</p>
-<pre><code>GET host:port/getFund
-{
-    &quot;name&quot;: &quot;fundName&quot;,//基金名称
-}
+<pre><code>GET host:port/fund/:name
+
 </code></pre>
 
 <p>Response:</p>
@@ -271,34 +269,10 @@
 }
 </code></pre>
 
-<h4 id="_12">查询所有基金信息</h4>
+<h4 id="_12">查询用户某一基金的信息</h4>
 <p>Request：</p>
-<pre><code>GET host:port/getFundList
-</code></pre>
+<pre><code>GET host:port/user/:name
 
-<p>Response:</p>
-<pre><code>{
-    &quot;status&quot;: &quot;OK&quot;,//或者&quot;Err&quot;
-    &quot;msg&quot;: &quot;[{
-                &quot;name&quot;: &quot;fundName&quot;,//基金名称
-                &quot;funds&quot;: 100,//初始基金数
-                &quot;assets&quot;: 100,//初始资金数
-                &quot;partnerAssets&quot;: 100,//注册资金
-                &quot;partnerTime&quot;: 100,//注册时间
-                &quot;buyStart&quot;: 100,//入购起点
-                &quot;buyPer&quot;: 100,//限购单量
-                &quot;buyAll&quot;: 100,//限购总量
-                &quot;net&quot;: 100//基金净值
-            }]&quot;//或错误信息
-}
-</code></pre>
-
-<h4 id="_13">查询用户某一基金的信息</h4>
-<p>Request：</p>
-<pre><code>GET host:port/getUser
-{
-    &quot;name&quot;: &quot;fundName&quot;,//基金名称
-}
 </code></pre>
 
 <p>Response:</p>
@@ -314,7 +288,7 @@
 </code></pre>
 
 <h3 id="hyperledger-api">Hyperledger API</h3>
-<h4 id="_14">初始化</h4>
+<h4 id="_13">初始化</h4>
 <p>Deploy Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -356,7 +330,7 @@
 }
 </code></pre>
 
-<h4 id="_15">创建基金</h4>
+<h4 id="_14">创建基金</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -398,7 +372,7 @@
 }
 </code></pre>
 
-<h4 id="_16">设置基金净值</h4>
+<h4 id="_15">设置基金净值</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -440,7 +414,7 @@
 }
 </code></pre>
 
-<h4 id="_17">设置基金池（扩股、回购）</h4>
+<h4 id="_16">设置基金池（扩股、回购）</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -482,7 +456,7 @@
 }
 </code></pre>
 
-<h4 id="_18">基金交易（认购赎回）</h4>
+<h4 id="_17">基金交易（认购赎回）</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -524,7 +498,7 @@
 }
 </code></pre>
 
-<h4 id="_19">基金限制设置</h4>
+<h4 id="_18">基金限制设置</h4>
 <p>Invoke Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -566,7 +540,7 @@
 }
 </code></pre>
 
-<h4 id="_20">基金/列表信息查询</h4>
+<h4 id="_19">基金/列表信息查询</h4>
 <p>Query Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -608,7 +582,7 @@
 }
 </code></pre>
 
-<h4 id="_21">基金净值/列表查询</h4>
+<h4 id="_20">基金净值/列表查询</h4>
 <p>Query Request:</p>
 <pre><code>POST host:port/chaincode
 {
@@ -650,7 +624,7 @@
 }
 </code></pre>
 
-<h4 id="_22">注册</h4>
+<h4 id="_21">注册</h4>
 <p>Enrollment Request:</p>
 <pre><code>POST host:port/registrar
 
