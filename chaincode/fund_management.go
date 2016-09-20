@@ -473,15 +473,15 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, err
 	}
 
-	// owner, err := stub.GetCallerCertificate()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Get caller certificate failed:%s", err)
-	// }
+	owner, err := stub.GetCallerCertificate()
+	if err != nil {
+		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
+	}
 
-	// _, userRow, err := getUserInfo(stub, fundName, owner)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	_, userRow, err := getUserInfo(stub, fundName, owner)
+	if err != nil {
+		return nil, err
+	}
 
 	//验证限制是否满足
 
