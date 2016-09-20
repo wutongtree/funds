@@ -478,7 +478,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("Get caller certificate failed:%s", err)
 	}
 
-	_, userRow, err := getUserInfo(stub, fundName, owner)
+	_, _, err = getUserInfo(stub, fundName, owner)
 	if err != nil {
 		return nil, err
 	}
