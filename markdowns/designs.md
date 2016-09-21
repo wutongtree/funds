@@ -51,6 +51,27 @@ Hyperledger：基金管理系统底层区块链技术实现，提供memberSrv服
 
 App模块为web client提供REST API。
 
+#### 登陆
+
+Request：
+
+```
+POST host:port/login
+{
+	"EnrollId":"lukas",//用户名
+	"enrollSecret": "xoao",//密码
+}
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "xxx"//错误信息
+}
+```
+
 #### 创建基金
 
 Request：
@@ -156,8 +177,9 @@ Request：
 ```
 POST host:port/transfer
 {
-	"name": "fundName",//基金名称
-	"assets": 100,//认购赎回数，>0认购  <0为赎回
+	"userName":"lukas",//用户名
+	"fundName": "fundName",//基金名称
+	"funds": 100,//认购赎回数，>0认购  <0为赎回
 }
 ```
 
@@ -202,7 +224,7 @@ Response:
 Request：
 
 ```
-GET host:port/user/:name
+GET host:port/user/:fundName/:userName
 
 ```
 
@@ -213,7 +235,7 @@ Response:
 	"status": "OK",//或者"Err"
 	"msg": "{
 				"name": "fundName",//基金名称
-				"owner": 100,//用户证书
+				"owner": 100,//用户名
 				"assets": 100,//资金数
 				"fund": 100,//基金数
 			}"//或错误信息
