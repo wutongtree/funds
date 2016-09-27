@@ -247,10 +247,10 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 9")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	name := args[0]
 	funds, err := strconv.ParseInt(args[1], 10, 64)
@@ -286,7 +286,7 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("fund net is not int64")
 	}
 
-	ok, err = stub.InsertRow("FundInfo", shim.Row{
+	ok, err := stub.InsertRow("FundInfo", shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: name}},
 			// &shim.Column{Value: &shim.Column_Bytes{Bytes: admin}},
@@ -321,10 +321,10 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	fundName := args[0]
 	fundNet, err := strconv.ParseInt(args[1], 10, 64)
@@ -357,10 +357,10 @@ func (t *FundManagementChaincode) setFundLimit(stub shim.ChaincodeStubInterface,
 		return nil, errors.New("Incorrect number of arguments. Expecting 6")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	fundName := args[0]
 	partnerAssets, err := strconv.ParseInt(args[1], 10, 64)
@@ -412,10 +412,10 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	ok, err := t.isAdmin(stub)
-	if !ok {
-		return nil, err
-	}
+	// ok, err := t.isAdmin(stub)
+	// if !ok {
+	// 	return nil, err
+	// }
 
 	fundName := args[0]
 	fundCount, err := strconv.ParseInt(args[1], 10, 64)
