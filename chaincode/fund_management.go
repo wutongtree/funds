@@ -286,7 +286,7 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("fund net is not int64")
 	}
 
-	ok, err := stub.InsertRow("FundInfo", shim.Row{
+	ok, err = stub.InsertRow("FundInfo", shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: name}},
 			// &shim.Column{Value: &shim.Column_Bytes{Bytes: admin}},
