@@ -38,7 +38,6 @@ var (
 	confidentialityOn bool
 
 	confidentialityLevel pb.ConfidentialityLevel
-	chaincodeName        string
 )
 
 func initNVP() (err error) {
@@ -109,13 +108,13 @@ func confidentiality(enabled bool) {
 func deployInternal() (resp *pb.Response, err error) {
 	adminCert, err := admin.GetTCertificateHandlerNext()
 	if err != nil {
-		appLogger.Errorf("Failed getting Bob TCert [%s]", err)
+		appLogger.Errorf("Failed getting admin TCert [%s]", err)
 		return
 	}
 
 	// Prepare the spec. The metadata includes the identity of the administrator
 	spec := &pb.ChaincodeSpec{
-		Type:                 1,
+		Type:                 pb.ChaincodeSpec_GOLANG,
 		ChaincodeID:          &pb.ChaincodeID{Path: "https://github.com/wutongtree/funds/chaincode"},
 		CtorMsg:              &pb.ChaincodeInput{Args: util.ToChaincodeArgs("init")},
 		Metadata:             adminCert.GetCertificate(),
@@ -176,7 +175,7 @@ func invokeInternal(invoker crypto.Client, invokerCert crypto.CertificateHandler
 
 	// Prepare spec and submit
 	spec := &pb.ChaincodeSpec{
-		Type:                 1,
+		Type:                 pb.ChaincodeSpec_GOLANG,
 		ChaincodeID:          &pb.ChaincodeID{Name: chaincodeName},
 		CtorMsg:              chaincodeInput,
 		Metadata:             sigma, // Proof of identity
@@ -197,7 +196,7 @@ func invokeInternal(invoker crypto.Client, invokerCert crypto.CertificateHandler
 func queryInternal(invoker crypto.Client, chaincodeInput *pb.ChaincodeInput) (resp *pb.Response, err error) {
 	// Prepare spec and submit
 	spec := &pb.ChaincodeSpec{
-		Type:                 1,
+		Type:                 pb.ChaincodeSpec_GOLANG,
 		ChaincodeID:          &pb.ChaincodeID{Name: chaincodeName},
 		CtorMsg:              chaincodeInput,
 		ConfidentialityLevel: confidentialityLevel,
@@ -205,12 +204,22 @@ func queryInternal(invoker crypto.Client, chaincodeInput *pb.ChaincodeInput) (re
 
 	chaincodeInvocationSpec := &pb.ChaincodeInvocationSpec{ChaincodeSpec: spec}
 
+	// Get the Transaction cert
+	txCertHandler, err := invoker.GetTCertificateHandlerNext()
+	if err != nil {
+
+	}
+	txHandler, err := txCertHandler.GetTransactionHandler()
+	if err != nil {
+
+	}
+
 	// Now create the Transactions message and send to Peer.
-	transaction, err := invoker.NewChaincodeQuery(chaincodeInvocationSpec, util.GenerateUUID())
+	transaction, err := txHandler.NewChaincodeQuery(chaincodeInvocationSpec, util.GenerateUUID())
 	if err != nil {
 		return nil, fmt.Errorf("Error query chaincode: %s ", err)
 	}
-
+	appLogger.Infof("transaction is :[%s]", transaction.String())
 	resp, err = processTransaction(transaction)
 	return
 }

@@ -159,7 +159,7 @@
 <p>Request：</p>
 <pre><code>POST host:port/login
 {
-    &quot;EnrollId&quot;:&quot;lukas&quot;,//用户名
+    &quot;enrollId&quot;:&quot;lukas&quot;,//用户名
     &quot;enrollSecret&quot;: &quot;xoao&quot;,//密码
 }
 </code></pre>
@@ -250,8 +250,8 @@
 <p>Request：</p>
 <pre><code>POST host:port/transfer
 {
-    &quot;userName&quot;:&quot;lukas&quot;,//用户名
-    &quot;fundName&quot;: &quot;fundName&quot;,//基金名称
+    &quot;enrollID&quot;:&quot;lukas&quot;,//用户ID
+    &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;funds&quot;: 100,//认购赎回数，&gt;0认购  &lt;0为赎回
 }
 </code></pre>
@@ -288,7 +288,7 @@
 
 <h4 id="_13">查询用户某一基金的信息</h4>
 <p>Request：</p>
-<pre><code>GET host:port/user/:fundName/:userName
+<pre><code>GET host:port/user/:fundName/:enrollID
 
 </code></pre>
 

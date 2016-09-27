@@ -58,7 +58,7 @@ Request：
 ```
 POST host:port/login
 {
-	"EnrollId":"lukas",//用户名
+	"enrollId":"lukas",//用户名
 	"enrollSecret": "xoao",//密码
 }
 ```
@@ -177,8 +177,8 @@ Request：
 ```
 POST host:port/transfer
 {
-	"userName":"lukas",//用户名
-	"fundName": "fundName",//基金名称
+	"enrollID":"lukas",//用户ID
+	"name": "fundName",//基金名称
 	"funds": 100,//认购赎回数，>0认购  <0为赎回
 }
 ```
@@ -224,7 +224,7 @@ Response:
 Request：
 
 ```
-GET host:port/user/:fundName/:userName
+GET host:port/user/:fundName/:enrollID
 
 ```
 
