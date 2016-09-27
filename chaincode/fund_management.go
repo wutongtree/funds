@@ -35,19 +35,19 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 
 	//set the admin
 	// the  metadata will contain the certificate of the administrator
-	// adminCert, err := stub.GetCallerMetadata()
-	// if err != nil {
-	// 	myLogger.Debug("Failed getting metadata")
-	// 	return nil, errors.New("Failed getting metadata.")
-	// }
-	// if len(adminCert) == 0 {
-	// 	myLogger.Debug("Invalid admin certificate. Empty.")
-	// 	return nil, errors.New("Invalid admin certificate. Empty.")
-	// }
+	adminCert, err := stub.GetCallerMetadata()
+	if err != nil {
+		myLogger.Debug("Failed getting metadata")
+		return nil, errors.New("Failed getting metadata.")
+	}
+	if len(adminCert) == 0 {
+		myLogger.Debug("Invalid admin certificate. Empty.")
+		return nil, errors.New("Invalid admin certificate. Empty.")
+	}
 
-	// myLogger.Debug("The administrator is [%x]", adminCert)
+	myLogger.Debug("The administrator is [%x]", adminCert)
 
-	// stub.PutState("admin", adminCert)
+	stub.PutState("admin", adminCert)
 
 	myLogger.Debug("Init Chaincode...done")
 
@@ -247,21 +247,12 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 9")
 	}
 
-	// ok, err := t.isAdmin(stub)
-	// if !ok {
-	// 	return nil, err
-	// }
+	ok, err := t.isAdmin(stub)
+	if !ok {
+		return nil, err
+	}
 
 	name := args[0]
-	// admin, err := base64.StdEncoding.DecodeString(args[1])
-	// if err != nil {
-	// 	return nil, errors.New("Failed fetching admin identify")
-	// }
-	// fundPool, err := strconv.ParseInt(args[2], 10, 64)
-	// if err != nil {
-	// 	return nil, errors.New("Fund pool is not int64")
-	// }
-
 	funds, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
 		return nil, errors.New("Fund is not int64")
@@ -330,10 +321,10 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	// ok, err := t.isAdmin(stub)
-	// if !ok {
-	// 	return nil, err
-	// }
+	ok, err := t.isAdmin(stub)
+	if !ok {
+		return nil, err
+	}
 
 	fundName := args[0]
 	fundNet, err := strconv.ParseInt(args[1], 10, 64)
@@ -366,10 +357,10 @@ func (t *FundManagementChaincode) setFundLimit(stub shim.ChaincodeStubInterface,
 		return nil, errors.New("Incorrect number of arguments. Expecting 6")
 	}
 
-	// ok, err := t.isAdmin(stub)
-	// if !ok {
-	// 	return nil, err
-	// }
+	ok, err := t.isAdmin(stub)
+	if !ok {
+		return nil, err
+	}
 
 	fundName := args[0]
 	partnerAssets, err := strconv.ParseInt(args[1], 10, 64)
@@ -421,10 +412,10 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 		return nil, errors.New("Incorrect number of arguments. Expecting 2")
 	}
 
-	// ok, err := t.isAdmin(stub)
-	// if !ok {
-	// 	return nil, err
-	// }
+	ok, err := t.isAdmin(stub)
+	if !ok {
+		return nil, err
+	}
 
 	fundName := args[0]
 	fundCount, err := strconv.ParseInt(args[1], 10, 64)
