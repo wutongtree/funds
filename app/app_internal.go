@@ -47,7 +47,7 @@ func initNVP() (err error) {
 
 	}
 
-	admin, err = setCryptoClient("jim", "6avZQLwcUe9b")
+	admin, err = setCryptoClient("binhn", "7avZQLwcUe9q")
 	if err != nil {
 		appLogger.Errorf("Failed deploying [%s]", err)
 		return
