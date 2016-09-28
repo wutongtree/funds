@@ -96,7 +96,7 @@ var (
 	chaincodeName string
 
 	restURL = "http://localhost:7050/"
-	// Alice is the deployer
+	// deployer
 	admin crypto.Client
 )
 
@@ -134,7 +134,7 @@ func deploy() (err error) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -328,7 +328,7 @@ func (s *FundManageAPP) create(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -482,7 +482,7 @@ func (s *FundManageAPP) setNet(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -669,7 +669,7 @@ func (s *FundManageAPP) setLimit(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -823,7 +823,7 @@ func (s *FundManageAPP) setPool(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -847,7 +847,7 @@ func (s *FundManageAPP) setPool(rw web.ResponseWriter, req *web.Request) {
 
 		return
 	}
-	appLogger.Debugf("url response: %v", string(respBody))
+	appLogger.Debugf("Resp [%s]", string(respBody))
 
 	result := new(rpcResponse)
 	err = json.Unmarshal(respBody, result)
@@ -986,7 +986,7 @@ func (s *FundManageAPP) transfer(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -1096,7 +1096,7 @@ func (s *FundManageAPP) getFund(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -1120,7 +1120,7 @@ func (s *FundManageAPP) getFund(rw web.ResponseWriter, req *web.Request) {
 
 		return
 	}
-	appLogger.Debugf("url response: %v", string(respBody))
+	appLogger.Debugf("Resp [%s]", string(respBody))
 
 	result := new(rpcResponse)
 	err = json.Unmarshal(respBody, result)
@@ -1230,7 +1230,7 @@ func (s *FundManageAPP) getUser(rw web.ResponseWriter, req *web.Request) {
 			},
 			//Timeout:1,
 			SecureContext:        "lukas",
-			ConfidentialityLevel: pb.ConfidentialityLevel_CONFIDENTIAL,
+			ConfidentialityLevel: confidentialityLevel,
 			// Metadata:             adminCert.GetCertificate(),
 			//Attributes:[]string{},
 		},
@@ -1254,7 +1254,7 @@ func (s *FundManageAPP) getUser(rw web.ResponseWriter, req *web.Request) {
 
 		return
 	}
-	appLogger.Debugf("url response: %v", string(respBody))
+	appLogger.Debugf("Resp [%s]", string(respBody))
 
 	result := new(rpcResponse)
 	err = json.Unmarshal(respBody, result)
