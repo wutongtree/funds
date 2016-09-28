@@ -157,7 +157,7 @@
 <p>App模块为web client提供REST API。</p>
 <h4 id="_6">登陆</h4>
 <p>Request：</p>
-<pre><code>POST host:port/login
+<pre><code>POST http://203.12.202.133:9900/login
 {
     &quot;enrollId&quot;:&quot;lukas&quot;,//用户名
     &quot;enrollSecret&quot;: &quot;xoao&quot;,//密码
@@ -173,7 +173,7 @@
 
 <h4 id="_7">创建基金</h4>
 <p>Request：</p>
-<pre><code>POST host:port/create
+<pre><code>POST http://203.12.202.133:9900/create
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;funds&quot;: 100,//初始基金数
@@ -196,7 +196,7 @@
 
 <h4 id="_8">设置基金净值</h4>
 <p>Request：</p>
-<pre><code>POST host:port/setnet
+<pre><code>POST http://203.12.202.133:9900/setnet
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;net&quot;: 100//基金净值
@@ -212,7 +212,7 @@
 
 <h4 id="_9">设置基金限制</h4>
 <p>Request：</p>
-<pre><code>POST host:port/setlimit
+<pre><code>POST http://203.12.202.133:9900/setlimit
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;partnerAssets&quot;: 100,//注册资金
@@ -232,7 +232,7 @@
 
 <h4 id="_10">扩股回购</h4>
 <p>Request：</p>
-<pre><code>POST host:port/setpool
+<pre><code>POST http://203.12.202.133:9900/setpool
 {
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
     &quot;funds&quot;: 100,//扩股回购数，&gt;0扩股  &lt;0为回购
@@ -248,7 +248,7 @@
 
 <h4 id="_11">认购赎回</h4>
 <p>Request：</p>
-<pre><code>POST host:port/transfer
+<pre><code>POST http://203.12.202.133:9900/transfer
 {
     &quot;enrollID&quot;:&quot;lukas&quot;,//用户ID
     &quot;name&quot;: &quot;fundName&quot;,//基金名称
@@ -265,7 +265,7 @@
 
 <h4 id="_12">根据基金名称查询基金信息</h4>
 <p>Request：</p>
-<pre><code>GET host:port/fund/:name
+<pre><code>GET http://203.12.202.133:9900/fund/:name
 
 </code></pre>
 
@@ -288,7 +288,7 @@
 
 <h4 id="_13">查询用户某一基金的信息</h4>
 <p>Request：</p>
-<pre><code>GET host:port/user/:fundName/:enrollID
+<pre><code>GET http://203.12.202.133:9900/user/:fundName/:enrollID
 
 </code></pre>
 

@@ -56,7 +56,7 @@ App模块为web client提供REST API。
 Request：
 
 ```
-POST host:port/login
+POST http://203.12.202.133:9900/login
 {
 	"enrollId":"lukas",//用户名
 	"enrollSecret": "xoao",//密码
@@ -77,7 +77,7 @@ Response:
 Request：
 
 ```
-POST host:port/create
+POST http://203.12.202.133:9900/create
 {
 	"name": "fundName",//基金名称
 	"funds": 100,//初始基金数
@@ -105,7 +105,7 @@ Response:
 Request：
 
 ```
-POST host:port/setnet
+POST http://203.12.202.133:9900/setnet
 {
 	"name": "fundName",//基金名称
 	"net": 100//基金净值
@@ -127,7 +127,7 @@ Response:
 Request：
 
 ```
-POST host:port/setlimit
+POST http://203.12.202.133:9900/setlimit
 {
 	"name": "fundName",//基金名称
 	"partnerAssets": 100,//注册资金
@@ -153,7 +153,7 @@ Response:
 Request：
 
 ```
-POST host:port/setpool
+POST http://203.12.202.133:9900/setpool
 {
 	"name": "fundName",//基金名称
 	"funds": 100,//扩股回购数，>0扩股  <0为回购
@@ -175,7 +175,7 @@ Response:
 Request：
 
 ```
-POST host:port/transfer
+POST http://203.12.202.133:9900/transfer
 {
 	"enrollID":"lukas",//用户ID
 	"name": "fundName",//基金名称
@@ -197,7 +197,7 @@ Response:
 Request：
 
 ```
-GET host:port/fund/:name
+GET http://203.12.202.133:9900/fund/:name
 
 ```
 
@@ -224,7 +224,7 @@ Response:
 Request：
 
 ```
-GET host:port/user/:fundName/:enrollID
+GET http://203.12.202.133:9900/user/:fundName/:enrollID
 
 ```
 
