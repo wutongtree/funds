@@ -1161,6 +1161,103 @@ func (s *FundManageAPP) getFund(rw web.ResponseWriter, req *web.Request) {
 	return
 }
 
+//查询所有基金
+func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
+	appLogger.Debug("------------- query funds...")
+
+	encoder := json.NewEncoder(rw)
+
+	args := []string{
+		"queryFundInfo",
+		"list",
+	}
+	// resp, err := queryInternal(admin, &pb.ChaincodeInput{Args: util.ToChaincodeArgs(args...)})
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed query fund: [%s]", err)
+	// 	return
+	// }
+	// appLogger.Debugf("Resp [%s]", resp.String())
+
+	request := &rpcRequest{
+		Jsonrpc: "2.0",
+		Method:  "query",
+		Params: &pb.ChaincodeSpec{
+			Type: pb.ChaincodeSpec_GOLANG,
+			ChaincodeID: &pb.ChaincodeID{
+				Name: chaincodeName,
+			},
+			CtorMsg: &pb.ChaincodeInput{
+				Args: util.ToChaincodeArgs(args...),
+			},
+			//Timeout:1,
+			SecureContext:        "lukas",
+			ConfidentialityLevel: confidentialityLevel,
+			// Metadata:             adminCert.GetCertificate(),
+			//Attributes:[]string{},
+		},
+		ID: time.Now().Unix(),
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query funds: [%s]", err)
+
+		return
+	}
+
+	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query funds: [%s]", err)
+
+		return
+	}
+	appLogger.Debugf("Resp [%s]", string(respBody))
+
+	result := new(rpcResponse)
+	err = json.Unmarshal(respBody, result)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query funds: [%s]", err)
+		return
+	}
+
+	if result.Error != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Error.Message})
+		appLogger.Errorf("Failed query funds: [%s]", result.Error.Message)
+		return
+	}
+	if result.Result.Status != "OK" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Result.Message})
+		appLogger.Errorf("Failed query funds: [%s]", result.Result.Message)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(restResult{Status: "OK", Msg: result.Result.Message})
+
+	// if resp.Status != pb.Response_SUCCESS {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: string(resp.Msg)})
+	// 	return
+	// }
+
+	// rw.WriteHeader(http.StatusOK)
+	// encoder.Encode(restResult{Status: "OK", Msg: string(resp.Msg)})
+	appLogger.Debug("------------- query funds Done")
+
+	return
+}
+
 //查询用户自己信息
 func (s *FundManageAPP) getUser(rw web.ResponseWriter, req *web.Request) {
 	appLogger.Debug("------------- query user ...")
@@ -1399,6 +1496,7 @@ func buildRESTRouter() *web.Router {
 	router.Post("/setpool", (*FundManageAPP).setPool)
 	router.Post("/transfer", (*FundManageAPP).transfer)
 	router.Get("/fund/:name", (*FundManageAPP).getFund)
+	router.Get("/funds", (*FundManageAPP).getFunds)
 	router.Get("/user/:fundName/:enrollID", (*FundManageAPP).getUser)
 
 	// Add not found page
