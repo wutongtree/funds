@@ -1145,8 +1145,25 @@ func (s *FundManageAPP) getFund(rw web.ResponseWriter, req *web.Request) {
 		return
 	}
 
+	var fund fundInfo
+	err = json.Unmarshal([]byte(result.Result.Message), &fund)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund: [%s]", err)
+
+		return
+	}
+	rest := struct {
+		Status string   `json:"status,omitempty"`
+		Msg    fundInfo `json:"msg,omitempty"`
+	}{
+		Status: "OK",
+		Msg:    fund,
+	}
+
 	rw.WriteHeader(http.StatusOK)
-	encoder.Encode(restResult{Status: "OK", Msg: result.Result.Message})
+	encoder.Encode(rest)
 
 	// if resp.Status != pb.Response_SUCCESS {
 	// 	rw.WriteHeader(http.StatusBadRequest)
@@ -1242,8 +1259,27 @@ func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
 		return
 	}
 
+	funds := struct {
+		List []fundInfo `json:"list"`
+	}{}
+	err = json.Unmarshal([]byte(result.Result.Message), &funds)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query funds: [%s]", err)
+
+		return
+	}
+	rest := struct {
+		Status string     `json:"status,omitempty"`
+		Msg    []fundInfo `json:"msg,omitempty"`
+	}{
+		Status: "OK",
+		Msg:    funds.List,
+	}
+
 	rw.WriteHeader(http.StatusOK)
-	encoder.Encode(restResult{Status: "OK", Msg: result.Result.Message})
+	encoder.Encode(rest)
 
 	// if resp.Status != pb.Response_SUCCESS {
 	// 	rw.WriteHeader(http.StatusBadRequest)
@@ -1256,6 +1292,13 @@ func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
 	appLogger.Debug("------------- query funds Done")
 
 	return
+}
+
+type userInfo struct {
+	Name   string `json:"name,omitempty"`
+	Owner  string `json:"owner,omitempty"`
+	Assets int64  `json:"assets,omitempty"`
+	Fund   int64  `json:"fund,omitempty"`
 }
 
 //查询用户自己信息
@@ -1377,8 +1420,25 @@ func (s *FundManageAPP) getUser(rw web.ResponseWriter, req *web.Request) {
 		return
 	}
 
+	var user userInfo
+	err = json.Unmarshal([]byte(result.Result.Message), &user)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query user: [%s]", err)
+
+		return
+	}
+	rest := struct {
+		Status string   `json:"status,omitempty"`
+		Msg    userInfo `json:"msg,omitempty"`
+	}{
+		Status: "OK",
+		Msg:    user,
+	}
+
 	rw.WriteHeader(http.StatusOK)
-	encoder.Encode(restResult{Status: "OK", Msg: result.Result.Message})
+	encoder.Encode(rest)
 
 	// if resp.Status != pb.Response_SUCCESS {
 	// 	rw.WriteHeader(http.StatusBadRequest)
