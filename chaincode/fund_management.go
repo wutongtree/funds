@@ -554,8 +554,39 @@ func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fund
 	return fundInfo, &row, nil
 }
 
-func getFundInfoList(stub shim.ChaincodeStubInterface) ([]fundInfo, error) {
-	return nil, nil
+func getFundInfoList(stub shim.ChaincodeStubInterface) ([]*fundInfo, error) {
+	rowChannel, err := stub.GetRows("FundInfo", nil)
+	if err != nil {
+		return nil, fmt.Errorf("getRowsTableTwo operation failed. %s", err)
+	}
+
+	var infos []*fundInfo
+	for {
+		select {
+		case row, ok := <-rowChannel:
+			if !ok {
+				rowChannel = nil
+			} else {
+				fundInfo := new(fundInfo)
+				fundInfo.Name = row.Columns[0].GetString_()
+				fundInfo.Funds = row.Columns[1].GetInt64()
+				fundInfo.Assets = row.Columns[2].GetInt64()
+				fundInfo.PartnerAssets = row.Columns[3].GetInt64()
+				fundInfo.PartnerTime = row.Columns[4].GetInt64()
+				fundInfo.BuyStart = row.Columns[5].GetInt64()
+				fundInfo.BuyPer = row.Columns[6].GetInt64()
+				fundInfo.BuyAll = row.Columns[7].GetInt64()
+				fundInfo.Net = row.Columns[8].GetInt64()
+
+				infos = append(infos, fundInfo)
+			}
+		}
+		if rowChannel == nil {
+			break
+		}
+	}
+
+	return infos, nil
 }
 
 type userInfo struct {
@@ -609,7 +640,7 @@ func (t *FundManagementChaincode) queryFundInfo(stub shim.ChaincodeStubInterface
 		}
 
 		list := struct {
-			List []fundInfo `json:"list,omitempty"`
+			List []*fundInfo `json:"list,omitempty"`
 		}{List: infos}
 
 		return json.Marshal(&list)
