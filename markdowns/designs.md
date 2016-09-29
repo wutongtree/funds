@@ -220,6 +220,34 @@ Response:
 }
 ```
 
+#### 查询所有基金信息
+
+Request：
+
+```
+GET http://203.12.202.133:9900/funds
+
+```
+
+Response:
+
+```
+{
+	"status": "OK",//或者"Err"
+	"msg": "[{
+				"name": "fundName",//基金名称
+				"funds": 100,//初始基金数
+				"assets": 100,//初始资金数
+				"partnerAssets": 100,//注册资金
+				"partnerTime": 100,//注册时间
+				"buyStart": 100,//入购起点
+				"buyPer": 100,//限购单量
+				"buyAll": 100,//限购总量
+				"net": 100//基金净值
+    }]"//或错误信息
+}
+```
+
 #### 查询用户某一基金的信息
 Request：
 
