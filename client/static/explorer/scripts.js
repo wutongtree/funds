@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 //const REST_ENDPOINT = "http://127.0.0.1:5000";
-// const REST_ENDPOINT = "https://1f50c0c3-7ac0-4d9e-bcbf-b0162f9c360b_vp1.us.blockchain.ibm.com";
 
 var App = angular.module("explorer", []);
 
