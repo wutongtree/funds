@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
@@ -12,12 +14,30 @@ import (
 	_ "github.com/wutongtree/funds/client/routers"
 )
 
-// var
+// var config
 var (
 	logger = logging.MustGetLogger("funds.client")
 )
 
+func writeHyperledgerExplorer() {
+	hyperledger_explorer := beego.AppConfig.String("hyperledger_explorer")
+	filename := "static/explorer/hyperledger.js"
+	fout, err := os.Create(filename)
+	defer fout.Close()
+
+	if err != nil {
+		fmt.Printf("Write hyperledger exploer error: %v\n", err)
+	} else {
+		content := fmt.Sprintf("const REST_ENDPOINT = \"%v\";", hyperledger_explorer)
+		fout.WriteString(content)
+		fmt.Printf("Write hyperledger explorer with: %v\n", hyperledger_explorer)
+	}
+}
+
 func main() {
+	// Write hyperledger explorer config
+	writeHyperledgerExplorer()
+
 	beego.InsertFilter("/*", beego.BeforeRouter, filterUser)
 	beego.ErrorHandler("404", pageNotFound)
 	beego.ErrorHandler("401", pageNoPermission)

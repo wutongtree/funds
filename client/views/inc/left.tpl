@@ -15,6 +15,7 @@
           <li><a href="/funds/manage">管理基金</a></li>
         </ul>
       </li>     
+		  <li><a href="/static/explorer"><i class="fa fa-home"></i> <span>查看区块链</span></a></li>  
     </ul>
     <!--sidebar nav end-->
   </div>
