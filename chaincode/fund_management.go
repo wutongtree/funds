@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/hyperledger/fabric/core/crypto/primitives"
@@ -119,6 +120,8 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 		&shim.ColumnDefinition{Name: "BuyPer", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "BuyAll", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "Net", Type: shim.ColumnDefinition_INT64, Key: false},
+		&shim.ColumnDefinition{Name: "CreateTime", Type: shim.ColumnDefinition_INT64, Key: false},
+		&shim.ColumnDefinition{Name: "UpdateTime", Type: shim.ColumnDefinition_INT64, Key: false},
 	})
 	if err != nil {
 		myLogger.Errorf("Failed creating FundInfo table: %s", err)
@@ -298,7 +301,9 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 			&shim.Column{Value: &shim.Column_Int64{Int64: buyStart}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: buyPer}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: buyAll}},
-			&shim.Column{Value: &shim.Column_Int64{Int64: net}}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: net}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix()}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
 	})
 	if !ok && err == nil {
 		return nil, errors.New("the fund info was already existed")
@@ -338,6 +343,7 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 	}
 
 	row.Columns[8].Value = &shim.Column_Int64{Int64: fundNet}
+	row.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
 
 	_, err = stub.ReplaceRow("FundInfo", *row)
 	if err != nil {
@@ -394,6 +400,7 @@ func (t *FundManagementChaincode) setFundLimit(stub shim.ChaincodeStubInterface,
 	row.Columns[5].Value = &shim.Column_Int64{Int64: buyStart}
 	row.Columns[6].Value = &shim.Column_Int64{Int64: buyPer}
 	row.Columns[7].Value = &shim.Column_Int64{Int64: buyAll}
+	row.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
 
 	_, err = stub.ReplaceRow("FundInfo", *row)
 	if err != nil {
@@ -435,6 +442,8 @@ func (t *FundManagementChaincode) setFundPool(stub shim.ChaincodeStubInterface, 
 	}
 
 	row.Columns[1].Value = &shim.Column_Int64{Int64: funds}
+	row.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
+
 	_, err = stub.ReplaceRow("FundInfo", *row)
 	if err != nil {
 		myLogger.Errorf("update fund pool failed:%s", err)
@@ -502,6 +511,8 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 
 	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
 	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
+	fundInfRow.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
+
 	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
 	if err != nil {
 		myLogger.Errorf("failed update fundinfo:%s", err)
@@ -530,6 +541,8 @@ type fundInfo struct {
 	BuyPer        int64  `json:"buyPer,omitempty"`
 	BuyAll        int64  `json:"buyAll,omitempty"`
 	Net           int64  `json:"net,omitempty"`
+	CreateTime    int64  `json:"createTime,omitempty"`
+	UpdateTime    int64  `json:"updateTime,omitempty"`
 }
 
 func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fundInfo, *shim.Row, error) {
@@ -550,6 +563,8 @@ func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fund
 	fundInfo.BuyPer = row.Columns[6].GetInt64()
 	fundInfo.BuyAll = row.Columns[7].GetInt64()
 	fundInfo.Net = row.Columns[8].GetInt64()
+	fundInfo.CreateTime = row.Columns[9].GetInt64()
+	fundInfo.UpdateTime = row.Columns[10].GetInt64()
 
 	return fundInfo, &row, nil
 }
@@ -577,6 +592,8 @@ func getFundInfoList(stub shim.ChaincodeStubInterface) ([]*fundInfo, error) {
 				fundInfo.BuyPer = row.Columns[6].GetInt64()
 				fundInfo.BuyAll = row.Columns[7].GetInt64()
 				fundInfo.Net = row.Columns[8].GetInt64()
+				fundInfo.CreateTime = row.Columns[9].GetInt64()
+				fundInfo.UpdateTime = row.Columns[10].GetInt64()
 
 				infos = append(infos, fundInfo)
 			}
