@@ -73,6 +73,8 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 		return t.transferFund(stub, args)
 	} else if function == "addNews" {
 		return t.addNews(stub, args)
+	} else if function == "initAccount" {
+		return t.initAccount(stub, args)
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
@@ -151,21 +153,22 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 		&shim.ColumnDefinition{Name: "News", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: true},
 	})
-	// 3. 账户资金信息：账户证书、资金量
-	// err = stub.CreateTable("AccountAsset", []*shim.ColumnDefinition{
-	// 	&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_BYTES, Key: true},
-	// 	&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
-	// })
-	// if err != nil {
-	// 	myLogger.Errorf("Failed creating AccountAsset table: %s", err)
-	// 	return errors.New("Failed creating AccountAsset table.")
-	// }
 
-	// 4. 用户基金信息：账户证书、基金名、所购基金份额
+	//4. 账户资金信息：账户名、资金量
+	err = stub.CreateTable("Account", []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
+	})
+	if err != nil {
+		myLogger.Errorf("Failed creating Account table: %s", err)
+		return errors.New("Failed creating Account table.")
+	}
+
+	// 5. 用户基金信息：账户证书、基金名、所购基金份额
 	err = stub.CreateTable("AccountFund", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_STRING, Key: true},
-		&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
+		// &shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "Fund", Type: shim.ColumnDefinition_INT64, Key: false},
 	})
 	if err != nil {
@@ -347,6 +350,32 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 	return nil, nil
 }
 
+//初始化账户信息
+func (t *FundManagementChaincode) initAccount(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debug("initAccount ...")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+
+	owner := args[0]
+
+	_, err := stub.InsertRow("Account", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: owner}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 10000}},
+		},
+	})
+	if err != nil {
+		myLogger.Errorf("insert user info failed:%s", err)
+		return nil, fmt.Errorf("insert user info failed:%s", err)
+	}
+
+	myLogger.Debug("initAccount Done.")
+
+	return nil, nil
+}
+
 //设置基金净值
 func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	myLogger.Debug("setFundNet.....")
@@ -518,19 +547,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, err
 	}
 
-	_, err = stub.InsertRow("AccountFund", shim.Row{
-		Columns: []*shim.Column{
-			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
-			&shim.Column{Value: &shim.Column_String_{String_: owner}},
-			&shim.Column{Value: &shim.Column_Int64{Int64: 10000}},
-			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
-	})
-	if err != nil {
-		myLogger.Errorf("insert user info failed:%s", err)
-		return nil, fmt.Errorf("insert user info failed:%s", err)
-	}
-
-	_, userRow, err := getUserInfo(stub, fundName, owner)
+	_, userRow, userFundRow, err := getUserInfo(stub, fundName, owner)
 	if err != nil {
 		return nil, err
 	}
@@ -540,8 +557,8 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	sysFunds := fundInfRow.Columns[1].GetInt64() - fundCount
 	sysAsset := fundInfRow.Columns[2].GetInt64() + fundCount*fundInfRow.Columns[8].GetInt64()
 
-	userFunds := userRow.Columns[3].GetInt64() + fundCount
-	userAsset := userRow.Columns[2].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
+	userFunds := userFundRow.Columns[2].GetInt64() + fundCount
+	userAsset := userRow.Columns[1].GetInt64() - fundCount*fundInfRow.Columns[8].GetInt64()
 	if fundCount > 0 {
 		//认购
 		if sysFunds < 0 || userAsset < 0 {
@@ -563,8 +580,14 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("failed update fundinfo:%s", err)
 	}
 
-	userRow.Columns[2].Value = &shim.Column_Int64{Int64: userAsset}
-	userRow.Columns[3].Value = &shim.Column_Int64{Int64: userFunds}
+	userRow.Columns[1].Value = &shim.Column_Int64{Int64: userAsset}
+	_, err = stub.ReplaceRow("Account", *userRow)
+	if err != nil {
+		myLogger.Errorf("failed update user info:%s", err)
+		return nil, fmt.Errorf("failed update fund info:%s", err)
+	}
+
+	userFundRow.Columns[2].Value = &shim.Column_Int64{Int64: userFunds}
 	_, err = stub.ReplaceRow("AccountFund", *userRow)
 	if err != nil {
 		myLogger.Errorf("failed update user fund info:%s", err)
@@ -689,25 +712,36 @@ type userInfo struct {
 	Fund   int64  `json:"fund"`
 }
 
-func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*userInfo, *shim.Row, error) {
+func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*userInfo, *shim.Row, *shim.Row, error) {
+
 	columns := []shim.Column{
+		shim.Column{Value: &shim.Column_String_{String_: userCert}},
+	}
+
+	rowAccount, err := stub.GetRow("Account", columns)
+	if err != nil {
+		myLogger.Errorf("Failed retrieving account Info [%s]: [%s]", userCert, err)
+		return nil, nil, nil, fmt.Errorf("Failed retrieving account Info [%s]: [%s]", userCert, err)
+	}
+
+	columns = []shim.Column{
 		shim.Column{Value: &shim.Column_String_{String_: fundName}},
 		shim.Column{Value: &shim.Column_String_{String_: userCert}},
 	}
 
-	row, err := stub.GetRow("AccountFund", columns)
+	rowAccountFund, err := stub.GetRow("AccountFund", columns)
 	if err != nil {
 		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-		return nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+		return nil, nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
 	}
 
 	userInfo := new(userInfo)
-	userInfo.Name = row.Columns[0].GetString_()
-	userInfo.Owner = row.Columns[1].GetString_()
-	userInfo.Assets = row.Columns[2].GetInt64()
-	userInfo.Fund = row.Columns[3].GetInt64()
+	userInfo.Name = fundName
+	userInfo.Owner = userCert
+	userInfo.Assets = rowAccount.Columns[1].GetInt64()
+	userInfo.Fund = rowAccountFund.Columns[2].GetInt64()
 
-	return userInfo, &row, nil
+	return userInfo, &rowAccount, &rowAccountFund, nil
 }
 
 //查询基金信息
@@ -750,7 +784,7 @@ func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface
 
 	user := args[0]
 	fundName := args[1]
-	info, _, err := getUserInfo(stub, fundName, user)
+	info, _, _, err := getUserInfo(stub, fundName, user)
 	if err != nil {
 		return nil, err
 	}
