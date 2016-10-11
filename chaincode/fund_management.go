@@ -85,6 +85,8 @@ func (t *FundManagementChaincode) Query(stub shim.ChaincodeStubInterface, functi
 		return t.queryFundInfo(stub, args)
 	} else if function == "queryUserInfo" {
 		return t.queryUserInfo(stub, args)
+	} else if function == "queryFundNetLog" {
+		return t.queryFundNetLog(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function query")
@@ -128,16 +130,16 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 		return fmt.Errorf("Failed creating FundInfo table: %s", err)
 	}
 
-	// 2. 基金净值：基金名、净值、时间(时间戳)
-	// err = stub.CreateTable("FundNet", []*shim.ColumnDefinition{
-	// 	&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
-	// 	&shim.ColumnDefinition{Name: "Net", Type: shim.ColumnDefinition_INT64, Key: false},
-	// 	// &shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: true},
-	// })
-	// if err != nil {
-	// 	myLogger.Errorf("Failed creating FundNet table: %s", err)
-	// 	return errors.New("Failed creating FundNet table.")
-	// }
+	//2. 基金净值：基金名、净值、时间(时间戳)
+	err = stub.CreateTable("FundNetLog", []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
+		&shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: true}, //毫秒时间戳
+		&shim.ColumnDefinition{Name: "Net", Type: shim.ColumnDefinition_INT64, Key: false},
+	})
+	if err != nil {
+		myLogger.Errorf("Failed creating FundNet table: %s", err)
+		return errors.New("Failed creating FundNet table.")
+	}
 
 	// 3. 账户资金信息：账户证书、资金量
 	// err = stub.CreateTable("AccountAsset", []*shim.ColumnDefinition{
@@ -289,6 +291,7 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 		return nil, errors.New("fund net is not int64")
 	}
 
+	//添加基金信息
 	ok, err := stub.InsertRow("FundInfo", shim.Row{
 		Columns: []*shim.Column{
 			&shim.Column{Value: &shim.Column_String_{String_: name}},
@@ -307,6 +310,22 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 	})
 	if !ok && err == nil {
 		return nil, errors.New("the fund info was already existed")
+	}
+
+	if err != nil {
+		myLogger.Errorf("insert fund info failed:%s", err)
+		return nil, fmt.Errorf("insert fund info failed:%s", err)
+	}
+
+	//添加基金净值log
+	ok, err = stub.InsertRow("FundNetLog", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: name}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix() * 1000}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: net}}},
+	})
+	if !ok && err == nil {
+		return nil, errors.New("the fund net log was already existed")
 	}
 
 	if err != nil {
@@ -346,6 +365,21 @@ func (t *FundManagementChaincode) setFundNet(stub shim.ChaincodeStubInterface, a
 	row.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
 
 	_, err = stub.ReplaceRow("FundInfo", *row)
+	if err != nil {
+		myLogger.Errorf("update fund net failed:%s", err)
+		return nil, fmt.Errorf("update fund net failed:%s", err)
+	}
+
+	//添加基金净值log
+	ok, err := stub.InsertRow("FundNetLog", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix() * 1000}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: fundNet}}},
+	})
+	if !ok && err == nil {
+		return nil, errors.New("the fund net log was already existed")
+	}
 	if err != nil {
 		myLogger.Errorf("update fund net failed:%s", err)
 		return nil, fmt.Errorf("update fund net failed:%s", err)
@@ -532,7 +566,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 }
 
 type fundInfo struct {
-	Name          string `json:"name,omitempty"`
+	Name          string `json:"name"`
 	Funds         int64  `json:"funds,omitempty"`
 	Assets        int64  `json:"assets,omitempty"`
 	PartnerAssets int64  `json:"partnerAssets,omitempty"`
@@ -541,7 +575,7 @@ type fundInfo struct {
 	BuyPer        int64  `json:"buyPer,omitempty"`
 	BuyAll        int64  `json:"buyAll,omitempty"`
 	Net           int64  `json:"net,omitempty"`
-	CreateTime    int64  `json:"createTime,omitempty"`
+	CreateTime    int64  `json:"createTime"`
 	UpdateTime    int64  `json:"updateTime,omitempty"`
 }
 
@@ -607,10 +641,10 @@ func getFundInfoList(stub shim.ChaincodeStubInterface) ([]*fundInfo, error) {
 }
 
 type userInfo struct {
-	Name   string `json:"name,omitempty"`
-	Owner  string `json:"owner,omitempty"`
-	Assets int64  `json:"assets,omitempty"`
-	Fund   int64  `json:"fund,omitempty"`
+	Name   string `json:"name"`
+	Owner  string `json:"owner"`
+	Assets int64  `json:"assets"`
+	Fund   int64  `json:"fund"`
 }
 
 func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*userInfo, *shim.Row, error) {
@@ -680,6 +714,49 @@ func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface
 		return nil, err
 	}
 	return json.Marshal(info)
+}
+
+type fundNetLog struct {
+	Name string `json:"name"`
+	Time int64  `json:"time"`
+	Net  int64  `json:"net"`
+}
+
+//查询净值历史
+func (t *FundManagementChaincode) queryFundNetLog(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debug("query fund net log...")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+
+	columns := []shim.Column{shim.Column{Value: &shim.Column_String_{String_: args[0]}}}
+	rowChannel, err := stub.GetRows("FundNetLog", columns)
+	if err != nil {
+		return nil, fmt.Errorf("getRowsTableTwo operation failed. %s", err)
+	}
+
+	var logs []*fundNetLog
+
+	for {
+		select {
+		case row, ok := <-rowChannel:
+			if !ok {
+				rowChannel = nil
+			} else {
+				log := new(fundNetLog)
+				log.Name = row.Columns[0].GetString_()
+				log.Time = row.Columns[1].GetInt64()
+				log.Net = row.Columns[2].GetInt64()
+
+				logs = append(logs, log)
+			}
+		}
+		if rowChannel == nil {
+			break
+		}
+	}
+	return json.Marshal(logs)
 }
 
 func main() {
