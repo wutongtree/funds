@@ -822,7 +822,7 @@ func (t *FundManagementChaincode) queryNews(stub shim.ChaincodeStubInterface, ar
 	colums := []shim.Column{shim.Column{Value: &shim.Column_String_{String_: args[0]}}}
 	rowChannel, err := stub.GetRows("FundNews", colums)
 	if err != nil {
-		return nil, fmt.Errorf("getRowsTableTwo operation failed. %s", err)
+		return nil, fmt.Errorf("getRowsTableTwo operation failed.FundNews   %s", err)
 	}
 
 	var news []*fundNews
