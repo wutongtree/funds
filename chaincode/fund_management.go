@@ -147,9 +147,9 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 
 	//3. 基金公告:基金名称、公告内容、时间
 	err = stub.CreateTable("FundNews", []*shim.ColumnDefinition{
-		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
 		&shim.ColumnDefinition{Name: "News", Type: shim.ColumnDefinition_STRING, Key: false},
-		&shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: false},
+		&shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: true},
 	})
 	// 3. 账户资金信息：账户证书、资金量
 	// err = stub.CreateTable("AccountAsset", []*shim.ColumnDefinition{
@@ -822,7 +822,7 @@ func (t *FundManagementChaincode) queryNews(stub shim.ChaincodeStubInterface, ar
 	colums := []shim.Column{shim.Column{Value: &shim.Column_String_{String_: args[0]}}}
 	rowChannel, err := stub.GetRows("FundNews", colums)
 	if err != nil {
-		return nil, fmt.Errorf("getRowsTableTwo operation failed.FundNews   %s", err)
+		return nil, fmt.Errorf("getRowsTableTwo operation failed. %s", err)
 	}
 
 	var news []*fundNews
