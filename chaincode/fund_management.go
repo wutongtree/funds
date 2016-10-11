@@ -734,7 +734,7 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*
 		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
 		return nil, nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
 	} else {
-		return nil, nil, nil, fmt.Errorf("qwertyuiop")
+		return nil, nil, nil, fmt.Errorf("qwertyuiop %+v", rowAccountFund)
 	}
 
 	userInfo := new(userInfo)
