@@ -71,6 +71,8 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 		return t.setFundPool(stub, args)
 	} else if function == "transferFund" {
 		return t.transferFund(stub, args)
+	} else if function == "addNews" {
+		return t.addNews(stub, args)
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
@@ -87,6 +89,8 @@ func (t *FundManagementChaincode) Query(stub shim.ChaincodeStubInterface, functi
 		return t.queryUserInfo(stub, args)
 	} else if function == "queryFundNetLog" {
 		return t.queryFundNetLog(stub, args)
+	} else if function == "queryNews" {
+		return t.queryNews(stub, args)
 	}
 
 	return nil, errors.New("Received unknown function query")
@@ -141,6 +145,12 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 		return errors.New("Failed creating FundNet table.")
 	}
 
+	//3. 基金公告:基金名称、公告内容、时间
+	err = stub.CreateTable("FundNews", []*shim.ColumnDefinition{
+		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "News", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "Time", Type: shim.ColumnDefinition_INT64, Key: false},
+	})
 	// 3. 账户资金信息：账户证书、资金量
 	// err = stub.CreateTable("AccountAsset", []*shim.ColumnDefinition{
 	// 	&shim.ColumnDefinition{Name: "Owner", Type: shim.ColumnDefinition_BYTES, Key: true},
@@ -565,6 +575,38 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	return nil, nil
 }
 
+//添加基金公告
+func (t *FundManagementChaincode) addNews(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debug("addNews......")
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2")
+	}
+	name := args[0]
+	news := args[1]
+
+	ok, err := stub.InsertRow("FundNews", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: name}},
+			&shim.Column{Value: &shim.Column_String_{String_: news}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix()}},
+		},
+	})
+
+	if !ok && err == nil {
+		return nil, errors.New("the fund news was already existed")
+	}
+
+	if err != nil {
+		myLogger.Errorf("insert fund news failed:%s", err)
+		return nil, fmt.Errorf("insert fund news failed:%s", err)
+	}
+
+	myLogger.Debug("addNews done.")
+
+	return nil, nil
+}
+
 type fundInfo struct {
 	Name          string `json:"name"`
 	Funds         int64  `json:"funds,omitempty"`
@@ -690,12 +732,11 @@ func (t *FundManagementChaincode) queryFundInfo(stub shim.ChaincodeStubInterface
 			return nil, err
 		}
 
-		list := struct {
-			List []*fundInfo `json:"list,omitempty"`
-		}{List: infos}
-
-		return json.Marshal(&list)
+		return json.Marshal(infos)
 	}
+
+	myLogger.Debug("query fund info done.")
+
 	return nil, nil
 }
 
@@ -713,6 +754,8 @@ func (t *FundManagementChaincode) queryUserInfo(stub shim.ChaincodeStubInterface
 	if err != nil {
 		return nil, err
 	}
+
+	myLogger.Debug("query user info. done.")
 	return json.Marshal(info)
 }
 
@@ -756,7 +799,55 @@ func (t *FundManagementChaincode) queryFundNetLog(stub shim.ChaincodeStubInterfa
 			break
 		}
 	}
+
+	myLogger.Debug("query fund net log done.")
+
 	return json.Marshal(logs)
+}
+
+type fundNews struct {
+	Name string `json:"name"`
+	News string `json:"news"`
+	Time int64  `json:"time"`
+}
+
+//查询基金公告
+func (t *FundManagementChaincode) queryNews(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	myLogger.Debug("query fund news...")
+
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 1")
+	}
+
+	colums := []shim.Column{shim.Column{Value: &shim.Column_String_{String_: args[0]}}}
+	rowChannel, err := stub.GetRows("FundNews", colums)
+	if err != nil {
+		return nil, fmt.Errorf("getRowsTableTwo operation failed. %s", err)
+	}
+
+	var news []*fundNews
+
+	for {
+		select {
+		case row, ok := <-rowChannel:
+			if !ok {
+				rowChannel = nil
+			} else {
+				news = append(news, &fundNews{
+					Name: row.Columns[0].GetString_(),
+					News: row.Columns[1].GetString_(),
+					Time: row.Columns[2].GetInt64(),
+				})
+			}
+		}
+
+		if rowChannel == nil {
+			break
+		}
+	}
+	myLogger.Debug("query fund news Done.")
+
+	return json.Marshal(news)
 }
 
 func main() {
