@@ -729,17 +729,19 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*
 		shim.Column{Value: &shim.Column_String_{String_: userCert}},
 	}
 
-	// rowAccountFund, err := stub.GetRow("AccountFund", columns)
-	// if err != nil {
-	// 	myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-	// 	return nil, nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
-	// }
+	rowAccountFund, err := stub.GetRow("AccountFund", columns)
+	if err != nil {
+		myLogger.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+		return nil, nil, nil, fmt.Errorf("Failed retrieving account fundInfo [%s]: [%s]", fundName, err)
+	} else {
+		return nil, nil, nil, fmt.Errorf("qwertyuiop")
+	}
 
 	userInfo := new(userInfo)
 	userInfo.Name = fundName
 	userInfo.Owner = userCert
 	userInfo.Assets = rowAccount.Columns[1].GetInt64()
-	// userInfo.Fund = rowAccountFund.Columns[2].GetInt64()
+	userInfo.Fund = rowAccountFund.Columns[2].GetInt64()
 
 	return userInfo, &rowAccount, nil, nil
 }
