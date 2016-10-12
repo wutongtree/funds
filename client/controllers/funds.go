@@ -30,12 +30,12 @@ func (c *FundsController) GetFund() {
 
 	myfund := models.MyFund{
 		Fund: models.Fund{Id: fund.Name,
-			Name:           fund.Name,
-			CreateTime:     time.Unix(fund.CreateTime, 0).Format("2006-01-02"),
-			Quotas:         float64(fund.Funds),
-			MarketValue:    float64(fund.Net * fund.Funds),
-			NetValue:       float64(fund.Net),
-			NetDelta:       "+0.001|0.94%",
+			Name:        fund.Name,
+			CreateTime:  time.Unix(fund.CreateTime, 0).Format("2006-01-02"),
+			Quotas:      float64(fund.Funds),
+			MarketValue: float64(fund.Net * fund.Funds),
+			NetValue:    float64(fund.Net),
+			// NetDelta:       "+0.001|0.94%",
 			ThresholdValue: float64(fund.Net * fund.BuyPer / 100),
 		},
 		MyQuotas:      float64(myappfund.Fund),
@@ -43,13 +43,25 @@ func (c *FundsController) GetFund() {
 		MyBalance:     float64(myappfund.Assets),
 	}
 
-	c.Data["myfund"] = myfund
-	fmt.Printf("GetFund: %v\n", myfund)
-
 	// 净值走势
 	netLog, _ := models.GetNetLog(fundid)
 	c.Data["netLog"] = netLog
 	fmt.Printf("GetNetLog: %v\n", netLog)
+
+	if len(netLog) <= 1 {
+		myfund.Fund.NetDelta = "0|0.00%"
+	} else {
+		delta := netLog[0][1] - netLog[1][1]
+
+		if delta == 0 {
+			myfund.Fund.NetDelta = "0|0.00%"
+		} else {
+			myfund.Fund.NetDelta = fmt.Sprintf("%+d|%.2f", delta, float64(delta)/float64(netLog[1][1])*100) + "%"
+		}
+	}
+
+	c.Data["myfund"] = myfund
+	fmt.Printf("GetFund: %v\n", myfund)
 
 	// 市场动态
 	markets := models.GetFundMarkets(fund.LatestTx)

@@ -82,6 +82,9 @@ type fundInfo struct {
 	BuyPer        int64  `json:"buyPer,omitempty"`
 	BuyAll        int64  `json:"buyAll,omitempty"`
 	Net           int64  `json:"net,omitempty"`
+	CreateTime    int64  `json:"createTime,omitempty"`
+	UpdateTime    int64  `json:"updateTime,omitempty"`
+	LatestTx      string `json:"latestTx,omitempty"`
 }
 
 var (
@@ -92,7 +95,7 @@ var (
 	peerClientConn *grpc.ClientConn
 	serverClient   pb.PeerClient
 
-	chaincodePath = "https://github.com/wutongtree/funds/chaincode"
+	chaincodePath = "github.com/wutongtree/funds/chaincode"
 	chaincodeName string
 
 	restURL = "http://localhost:7050/"
@@ -542,6 +545,162 @@ func (s *FundManageAPP) setNet(rw web.ResponseWriter, req *web.Request) {
 	// encoder.Encode(restResult{Status: "OK", Msg: "successful set net"})
 
 	appLogger.Debug("------------- setNet Done!")
+
+	return
+}
+
+//设置基金公告
+func (s *FundManageAPP) setNews(rw web.ResponseWriter, req *web.Request) {
+	appLogger.Debug("------------- setNews ...")
+
+	encoder := json.NewEncoder(rw)
+
+	// Decode the incoming JSON payload
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed set news: [%s]", err)
+
+		return
+	}
+
+	var news struct {
+		Name string `json:"name"`
+		News string `json:"news"`
+	}
+
+	err = json.Unmarshal(body, &news)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed set news: [%s]", err)
+
+		return
+	}
+	appLogger.Debugf("set news Request: %v", news)
+
+	// invoker, err := setCryptoClient("fund.EnrollID", "")
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed set net: [%s]", err)
+
+	// 	return
+	// }
+
+	// Check that the name,fund,assets are not left blank.
+	if news.Name == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: "fund name may not be blank"})
+		appLogger.Errorf("Failed set news: [%s]", errors.New("fund name may not be blank"))
+
+		return
+	}
+
+	if news.News == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: "fund news may not be blank"})
+		appLogger.Errorf("Failed set news: [%s]", errors.New("fund news may not be blank"))
+
+		return
+	}
+
+	args := []string{"addNews",
+		news.Name,
+		news.News,
+	}
+
+	// invokerCert, err := invoker.GetTCertificateHandlerNext()
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed set net: [%s]", err)
+	// 	return
+	// }
+
+	// resp, err := invokeInternal(invoker, invokerCert, &pb.ChaincodeInput{Args: util.ToChaincodeArgs(args...)})
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed set net: [%s]", err)
+	// 	return
+	// }
+	// appLogger.Debugf("Resp [%s]", resp.String())
+
+	request := &rpcRequest{
+		Jsonrpc: "2.0",
+		Method:  "invoke",
+		Params: &pb.ChaincodeSpec{
+			Type: pb.ChaincodeSpec_GOLANG,
+			ChaincodeID: &pb.ChaincodeID{
+				Name: chaincodeName,
+			},
+			CtorMsg: &pb.ChaincodeInput{
+				Args: util.ToChaincodeArgs(args...),
+			},
+			//Timeout:1,
+			SecureContext:        "lukas",
+			ConfidentialityLevel: confidentialityLevel,
+			// Metadata:             adminCert.GetCertificate(),
+			//Attributes:[]string{},
+		},
+		ID: time.Now().Unix(),
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed set news: [%s]", err)
+
+		return
+	}
+
+	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed set news: [%s]", err)
+
+		return
+	}
+	appLogger.Debugf("Resp [%s]", string(respBody))
+
+	result := new(rpcResponse)
+	err = json.Unmarshal(respBody, result)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed set news: [%s]", err)
+		return
+	}
+
+	if result.Error != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Error.Message})
+	}
+	if result.Result.Status != "OK" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Result.Message})
+		appLogger.Errorf("Failed set news: [%s]", result.Result.Message)
+
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(restResult{Status: "OK"})
+
+	// if resp.Status != pb.Response_SUCCESS {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: string(resp.Msg)})
+	// 	return
+	// }
+
+	// rw.WriteHeader(http.StatusOK)
+	// encoder.Encode(restResult{Status: "OK", Msg: "successful set net"})
+
+	appLogger.Debug("------------- setNews Done!")
 
 	return
 }
@@ -1156,10 +1315,10 @@ func (s *FundManageAPP) getFund(rw web.ResponseWriter, req *web.Request) {
 	}
 	rest := struct {
 		Status string   `json:"status,omitempty"`
-		Msg    fundInfo `json:"msg,omitempty"`
+		Result fundInfo `json:"result,omitempty"`
 	}{
 		Status: "OK",
-		Msg:    fund,
+		Result: fund,
 	}
 
 	rw.WriteHeader(http.StatusOK)
@@ -1259,9 +1418,7 @@ func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
 		return
 	}
 
-	funds := struct {
-		List []fundInfo `json:"list"`
-	}{}
+	var funds []fundInfo
 	err = json.Unmarshal([]byte(result.Result.Message), &funds)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
@@ -1272,10 +1429,10 @@ func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
 	}
 	rest := struct {
 		Status string     `json:"status,omitempty"`
-		Msg    []fundInfo `json:"msg,omitempty"`
+		Result []fundInfo `json:"result,omitempty"`
 	}{
 		Status: "OK",
-		Msg:    funds.List,
+		Result: funds,
 	}
 
 	rw.WriteHeader(http.StatusOK)
@@ -1290,6 +1447,270 @@ func (s *FundManageAPP) getFunds(rw web.ResponseWriter, req *web.Request) {
 	// rw.WriteHeader(http.StatusOK)
 	// encoder.Encode(restResult{Status: "OK", Msg: string(resp.Msg)})
 	appLogger.Debug("------------- query funds Done")
+
+	return
+}
+
+type fundNetLog struct {
+	Name string `json:"name"`
+	Time int64  `json:"time"`
+	Net  int64  `json:"net"`
+}
+
+//查询基金净值历史
+func (s *FundManageAPP) getFundNetLog(rw web.ResponseWriter, req *web.Request) {
+	appLogger.Debug("------------- query fund net log...")
+
+	encoder := json.NewEncoder(rw)
+
+	fundName := req.PathParams["name"]
+
+	// Check that the name,fund,assets are not left blank.
+	if fundName == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: "fund name may not be blank"})
+		appLogger.Errorf("Failed query fund net log: [%s]", errors.New("fund name may not be blank"))
+
+		return
+	}
+
+	args := []string{
+		"queryFundNetLog",
+		fundName,
+	}
+	// resp, err := queryInternal(admin, &pb.ChaincodeInput{Args: util.ToChaincodeArgs(args...)})
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed query fund: [%s]", err)
+	// 	return
+	// }
+	// appLogger.Debugf("Resp [%s]", resp.String())
+
+	request := &rpcRequest{
+		Jsonrpc: "2.0",
+		Method:  "query",
+		Params: &pb.ChaincodeSpec{
+			Type: pb.ChaincodeSpec_GOLANG,
+			ChaincodeID: &pb.ChaincodeID{
+				Name: chaincodeName,
+			},
+			CtorMsg: &pb.ChaincodeInput{
+				Args: util.ToChaincodeArgs(args...),
+			},
+			//Timeout:1,
+			SecureContext:        "lukas",
+			ConfidentialityLevel: confidentialityLevel,
+			// Metadata:             adminCert.GetCertificate(),
+			//Attributes:[]string{},
+		},
+		ID: time.Now().Unix(),
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund net log: [%s]", err)
+
+		return
+	}
+
+	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund net log: [%s]", err)
+
+		return
+	}
+	appLogger.Debugf("Resp [%s]", string(respBody))
+
+	result := new(rpcResponse)
+	err = json.Unmarshal(respBody, result)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund net log: [%s]", err)
+		return
+	}
+
+	if result.Error != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Error.Message})
+		appLogger.Errorf("Failed query fund net log: [%s]", result.Error.Message)
+		return
+	}
+	if result.Result.Status != "OK" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Result.Message})
+		appLogger.Errorf("Failed query fund net log: [%s]", result.Result.Message)
+
+		return
+	}
+
+	var logs []fundNetLog
+
+	err = json.Unmarshal([]byte(result.Result.Message), &logs)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund net log: [%s]", err)
+
+		return
+	}
+	rest := struct {
+		Status string       `json:"status,omitempty"`
+		Result []fundNetLog `json:"result,omitempty"`
+	}{
+		Status: "OK",
+		Result: logs,
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(rest)
+
+	// if resp.Status != pb.Response_SUCCESS {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: string(resp.Msg)})
+	// 	return
+	// }
+
+	// rw.WriteHeader(http.StatusOK)
+	// encoder.Encode(restResult{Status: "OK", Msg: string(resp.Msg)})
+	appLogger.Debug("------------- query fund net log Done")
+
+	return
+}
+
+type fundNews struct {
+	Name string `json:"name"`
+	Time int64  `json:"time"`
+	News string `json:"news"`
+}
+
+//查询基金公告
+func (s *FundManageAPP) getFundNews(rw web.ResponseWriter, req *web.Request) {
+	appLogger.Debug("------------- query fund news log...")
+
+	encoder := json.NewEncoder(rw)
+
+	fundName := req.PathParams["name"]
+
+	// Check that the name,fund,assets are not left blank.
+	if fundName == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: "fund name may not be blank"})
+		appLogger.Errorf("Failed query fund news: [%s]", errors.New("fund name may not be blank"))
+
+		return
+	}
+
+	args := []string{
+		"queryNews",
+		fundName,
+	}
+	// resp, err := queryInternal(admin, &pb.ChaincodeInput{Args: util.ToChaincodeArgs(args...)})
+	// if err != nil {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+	// 	appLogger.Errorf("Failed query fund: [%s]", err)
+	// 	return
+	// }
+	// appLogger.Debugf("Resp [%s]", resp.String())
+
+	request := &rpcRequest{
+		Jsonrpc: "2.0",
+		Method:  "query",
+		Params: &pb.ChaincodeSpec{
+			Type: pb.ChaincodeSpec_GOLANG,
+			ChaincodeID: &pb.ChaincodeID{
+				Name: chaincodeName,
+			},
+			CtorMsg: &pb.ChaincodeInput{
+				Args: util.ToChaincodeArgs(args...),
+			},
+			//Timeout:1,
+			SecureContext:        "lukas",
+			ConfidentialityLevel: confidentialityLevel,
+			// Metadata:             adminCert.GetCertificate(),
+			//Attributes:[]string{},
+		},
+		ID: time.Now().Unix(),
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund news: [%s]", err)
+
+		return
+	}
+
+	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund news: [%s]", err)
+
+		return
+	}
+	appLogger.Debugf("Resp [%s]", string(respBody))
+
+	result := new(rpcResponse)
+	err = json.Unmarshal(respBody, result)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund news: [%s]", err)
+		return
+	}
+
+	if result.Error != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Error.Message})
+		appLogger.Errorf("Failed query fund news: [%s]", result.Error.Message)
+		return
+	}
+	if result.Result.Status != "OK" {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: result.Result.Message})
+		appLogger.Errorf("Failed query fund news: [%s]", result.Result.Message)
+
+		return
+	}
+
+	var news []fundNews
+
+	err = json.Unmarshal([]byte(result.Result.Message), &news)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restResult{Status: "Err", Msg: err.Error()})
+		appLogger.Errorf("Failed query fund news: [%s]", err)
+
+		return
+	}
+	rest := struct {
+		Status string     `json:"status,omitempty"`
+		Result []fundNews `json:"result,omitempty"`
+	}{
+		Status: "OK",
+		Result: news,
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(rest)
+
+	// if resp.Status != pb.Response_SUCCESS {
+	// 	rw.WriteHeader(http.StatusBadRequest)
+	// 	encoder.Encode(restResult{Status: "Err", Msg: string(resp.Msg)})
+	// 	return
+	// }
+
+	// rw.WriteHeader(http.StatusOK)
+	// encoder.Encode(restResult{Status: "OK", Msg: string(resp.Msg)})
+	appLogger.Debug("------------- query fund news Done")
 
 	return
 }
@@ -1431,10 +1852,10 @@ func (s *FundManageAPP) getUser(rw web.ResponseWriter, req *web.Request) {
 	}
 	rest := struct {
 		Status string   `json:"status,omitempty"`
-		Msg    userInfo `json:"msg,omitempty"`
+		Result userInfo `json:"result,omitempty"`
 	}{
 		Status: "OK",
-		Msg:    user,
+		Result: user,
 	}
 
 	rw.WriteHeader(http.StatusOK)
@@ -1503,11 +1924,81 @@ func (s *FundManageAPP) login(rw web.ResponseWriter, req *web.Request) {
 		return
 	}
 
+	err = initAccount(loginRequest.EnrollID)
+	if err != nil {
+		appLogger.Errorf("Failed login: [%s]", err)
+
+		return
+	}
+
 	rw.WriteHeader(http.StatusOK)
 	encoder.Encode(restResult{Status: "OK", Msg: fmt.Sprintf("Login successful for user '%s'.", loginRequest.EnrollID)})
 	appLogger.Debugf("Login successful for user '%s'.\n", loginRequest.EnrollID)
 
 	appLogger.Debug("------------- login Done")
+
+	return
+}
+
+//初始化账户信息
+func initAccount(enrollID string) (err error) {
+	appLogger.Debug("------------- initAccount...")
+
+	args := []string{
+		"initAccount",
+		enrollID,
+	}
+
+	request := &rpcRequest{
+		Jsonrpc: "2.0",
+		Method:  "invoke",
+		Params: &pb.ChaincodeSpec{
+			Type: pb.ChaincodeSpec_GOLANG,
+			ChaincodeID: &pb.ChaincodeID{
+				Name: chaincodeName,
+			},
+			CtorMsg: &pb.ChaincodeInput{
+				Args: util.ToChaincodeArgs(args...),
+			},
+			//Timeout:1,
+			SecureContext:        "lukas",
+			ConfidentialityLevel: confidentialityLevel,
+			// Metadata:             adminCert.GetCertificate(),
+			//Attributes:[]string{},
+		},
+		ID: time.Now().Unix(),
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		appLogger.Errorf("Failed initAccount: [%s]", err)
+		return
+	}
+
+	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
+	if err != nil {
+		appLogger.Errorf("Failed initAccount: [%s]", err)
+		return
+	}
+	appLogger.Debugf("Resp [%s]", string(respBody))
+
+	result := new(rpcResponse)
+	err = json.Unmarshal(respBody, result)
+	if err != nil {
+		appLogger.Errorf("Failed initAccount: [%s]", err)
+		return
+	}
+
+	if result.Error != nil {
+		appLogger.Errorf("Failed initAccount: [%s]", result.Error.Message)
+		return errors.New(result.Error.Message)
+	}
+	if result.Result.Status != "OK" {
+		appLogger.Errorf("Failed initAccount: [%s]", result.Result.Message)
+		return errors.New(result.Error.Message)
+	}
+
+	appLogger.Debug("------------- initAccount Done")
 
 	return
 }
@@ -1558,6 +2049,9 @@ func buildRESTRouter() *web.Router {
 	router.Get("/fund/:name", (*FundManageAPP).getFund)
 	router.Get("/funds", (*FundManageAPP).getFunds)
 	router.Get("/user/:fundName/:enrollID", (*FundManageAPP).getUser)
+	router.Get("/netLog/:name", (*FundManageAPP).getFundNetLog)
+	router.Post("/setnews", (*FundManageAPP).setNews)
+	router.Get("/news/:name", (*FundManageAPP).getFundNews)
 
 	// Add not found page
 	router.NotFound((*FundManageAPP).NotFound)

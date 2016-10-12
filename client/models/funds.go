@@ -346,6 +346,8 @@ func GetNetLog(fundid string) (history [][]int64, err error) {
 		history = append(history, []int64{v.Time, v.Net})
 	}
 
+	sort.Sort(NetLog(history))
+
 	return
 }
 
@@ -657,9 +659,15 @@ func SetFundNews(userId, fundid, news string) error {
 }
 
 // 对公告按时间排序
-
 type NewsByTime []FundNews
 
 func (x NewsByTime) Len() int           { return len(x) }
 func (x NewsByTime) Less(i, j int) bool { return x[i].Time > x[j].Time }
 func (x NewsByTime) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+
+//净值记录排序
+type NetLog [][]int64
+
+func (x NetLog) Len() int           { return len(x) }
+func (x NetLog) Less(i, j int) bool { return x[i][0] > x[j][0] }
+func (x NetLog) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
