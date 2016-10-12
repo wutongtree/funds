@@ -653,17 +653,20 @@ func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fund
 	}
 
 	fundInfo := new(fundInfo)
-	fundInfo.Name = row.Columns[0].GetString_()
-	fundInfo.Funds = row.Columns[1].GetInt64()
-	fundInfo.Assets = row.Columns[2].GetInt64()
-	fundInfo.PartnerAssets = row.Columns[3].GetInt64()
-	fundInfo.PartnerTime = row.Columns[4].GetInt64()
-	fundInfo.BuyStart = row.Columns[5].GetInt64()
-	fundInfo.BuyPer = row.Columns[6].GetInt64()
-	fundInfo.BuyAll = row.Columns[7].GetInt64()
-	fundInfo.Net = row.Columns[8].GetInt64()
-	fundInfo.CreateTime = row.Columns[9].GetInt64()
-	fundInfo.UpdateTime = row.Columns[10].GetInt64()
+
+	if len(row.Columns) > 0 {
+		fundInfo.Name = row.Columns[0].GetString_()
+		fundInfo.Funds = row.Columns[1].GetInt64()
+		fundInfo.Assets = row.Columns[2].GetInt64()
+		fundInfo.PartnerAssets = row.Columns[3].GetInt64()
+		fundInfo.PartnerTime = row.Columns[4].GetInt64()
+		fundInfo.BuyStart = row.Columns[5].GetInt64()
+		fundInfo.BuyPer = row.Columns[6].GetInt64()
+		fundInfo.BuyAll = row.Columns[7].GetInt64()
+		fundInfo.Net = row.Columns[8].GetInt64()
+		fundInfo.CreateTime = row.Columns[9].GetInt64()
+		fundInfo.UpdateTime = row.Columns[10].GetInt64()
+	}
 
 	return fundInfo, &row, nil
 }
@@ -738,7 +741,10 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*
 	userInfo := new(userInfo)
 	userInfo.Name = fundName
 	userInfo.Owner = userCert
-	userInfo.Assets = rowAccount.Columns[1].GetInt64()
+
+	if len(rowAccount.Columns) > 0 {
+		userInfo.Assets = rowAccount.Columns[1].GetInt64()
+	}
 
 	if len(rowAccountFund.Columns) > 0 {
 		userInfo.Fund = rowAccountFund.Columns[2].GetInt64()
