@@ -594,6 +594,8 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	}
 
 	if len(userFundRow.Columns) > 0 {
+		return nil, fmt.Errorf("wwwwwwwww")
+
 		userFundRow.Columns[2].Value = &shim.Column_Int64{Int64: userFunds}
 		_, err = stub.ReplaceRow("AccountFund", *userRow)
 		if err != nil {
@@ -601,6 +603,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 			return nil, fmt.Errorf("failed update user fund info:%s", err)
 		}
 	} else {
+		return nil, fmt.Errorf("qqqqqqqq")
 		_, err = stub.InsertRow("AccountFund", shim.Row{
 			Columns: []*shim.Column{
 				&shim.Column{Value: &shim.Column_String_{String_: fundName}},
