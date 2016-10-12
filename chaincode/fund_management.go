@@ -579,7 +579,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
 	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
 	fundInfRow.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
-
+	return nil, errors.New("赎回失败，系统资金不足或者赎回数量超出用户基金数")
 	// _, err = stub.ReplaceRow("FundInfo", *fundInfRow)
 	// if err != nil {
 	// 	myLogger.Errorf("failed update fundinfo:%s", err)
