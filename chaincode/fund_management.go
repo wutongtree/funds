@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -118,8 +119,6 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 	// 1. 基金基本信息：基金名称、管理员、基金池容量、基金池中剩余基金数、系统资金量、参与者资金量、参与者注册时间、认购起点、认购单量、认购总量
 	err := stub.CreateTable("FundInfo", []*shim.ColumnDefinition{
 		&shim.ColumnDefinition{Name: "Name", Type: shim.ColumnDefinition_STRING, Key: true},
-		// &shim.ColumnDefinition{Name: "Admin", Type: shim.ColumnDefinition_BYTES, Key: false},
-		// &shim.ColumnDefinition{Name: "FundPool", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "Funds", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "Assets", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "PartnerAssets", Type: shim.ColumnDefinition_INT64, Key: false},
@@ -130,6 +129,7 @@ func createTable(stub shim.ChaincodeStubInterface) error {
 		&shim.ColumnDefinition{Name: "Net", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "CreateTime", Type: shim.ColumnDefinition_INT64, Key: false},
 		&shim.ColumnDefinition{Name: "UpdateTime", Type: shim.ColumnDefinition_INT64, Key: false},
+		&shim.ColumnDefinition{Name: "LatestTx", Type: shim.ColumnDefinition_STRING, Key: false}, //最近10笔交易，以|切分，包括用户名、交易额、时间戳
 	})
 	if err != nil {
 		myLogger.Errorf("Failed creating FundInfo table: %s", err)
@@ -319,7 +319,9 @@ func (t *FundManagementChaincode) createFund(stub shim.ChaincodeStubInterface, a
 			&shim.Column{Value: &shim.Column_Int64{Int64: buyAll}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: net}},
 			&shim.Column{Value: &shim.Column_Int64{Int64: time.Now().Unix()}},
-			&shim.Column{Value: &shim.Column_Int64{Int64: 0}}},
+			&shim.Column{Value: &shim.Column_Int64{Int64: 0}},
+			&shim.Column{Value: &shim.Column_String_{String_: ""}},
+		},
 	})
 	if !ok && err == nil {
 		return nil, errors.New("the fund info was already existed")
@@ -576,16 +578,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		}
 	}
 
-	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
-	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
-	fundInfRow.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
-
-	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
-	if err != nil {
-		myLogger.Errorf("failed update fundinfo:%s", err)
-		return nil, fmt.Errorf("failed update fundinfo:%s", err)
-	}
-
+	//修改账户信息
 	userRow.Columns[1].Value = &shim.Column_Int64{Int64: userAsset}
 	_, err = stub.ReplaceRow("Account", *userRow)
 	if err != nil {
@@ -593,6 +586,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 		return nil, fmt.Errorf("failed update fund info:%s", err)
 	}
 
+	//修改账户基金信息
 	if len(userFundRow.Columns) > 0 {
 		userFundRow.Columns[2].Value = &shim.Column_Int64{Int64: userFunds}
 		_, err = stub.ReplaceRow("AccountFund", *userFundRow)
@@ -612,6 +606,27 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 			myLogger.Errorf("failed update user fund info:%s", err)
 			return nil, fmt.Errorf("failed update user fund info:%s", err)
 		}
+	}
+
+	//修改基金信息
+	latestTx := fundInfRow.Columns[11].GetString_()
+	tx := strings.Split(latestTx, "|")
+	if len := len(tx); len > 0 {
+		tx[len-1] = ""
+		//用户名，交易额，交易时间
+		latestTx = strings.Join(tx, "|")
+	}
+	latestTx = owner + "," + strconv.FormatInt(fundCount, 10) + "," + strconv.FormatInt(time.Now().Unix(), 10) + "|" + latestTx
+
+	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
+	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
+	fundInfRow.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
+	fundInfRow.Columns[11].Value = &shim.Column_String_{String_: latestTx}
+
+	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
+	if err != nil {
+		myLogger.Errorf("failed update fundinfo:%s", err)
+		return nil, fmt.Errorf("failed update fundinfo:%s", err)
 	}
 
 	myLogger.Debug("transferFund done.")
@@ -662,6 +677,7 @@ type fundInfo struct {
 	Net           int64  `json:"net,omitempty"`
 	CreateTime    int64  `json:"createTime"`
 	UpdateTime    int64  `json:"updateTime,omitempty"`
+	LatestTx      string `json:"latestTx,omitempty"`
 }
 
 func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fundInfo, *shim.Row, error) {
@@ -686,6 +702,7 @@ func getFundInfoByName(stub shim.ChaincodeStubInterface, fundName string) (*fund
 		fundInfo.Net = row.Columns[8].GetInt64()
 		fundInfo.CreateTime = row.Columns[9].GetInt64()
 		fundInfo.UpdateTime = row.Columns[10].GetInt64()
+		fundInfo.LatestTx = row.Columns[11].GetString_()
 	}
 
 	return fundInfo, &row, nil
@@ -716,6 +733,7 @@ func getFundInfoList(stub shim.ChaincodeStubInterface) ([]*fundInfo, error) {
 				fundInfo.Net = row.Columns[8].GetInt64()
 				fundInfo.CreateTime = row.Columns[9].GetInt64()
 				fundInfo.UpdateTime = row.Columns[10].GetInt64()
+				fundInfo.LatestTx = row.Columns[11].GetString_()
 
 				infos = append(infos, fundInfo)
 			}
