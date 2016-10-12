@@ -38,8 +38,8 @@
                       <tr>
                         <th>基金名称</th>
                         <th>成立日期</th>
-                        <th>规模(亿份)</th>
-                        <th>市值(亿元)</th>
+                        <th>规模(份)</th>
+                        <th>市值(元)</th>
                         <th>净值</th>
                       </tr>
                     </thead>
@@ -48,7 +48,7 @@
                     {{range $k,$v := .funds}}
                     <tr>
                       <td><a href="/funds/{{$v.Id}}">{{$v.Name}}</a></td>
-                      <td>{{$v.CreatTime}}</td>
+                      <td>{{$v.CreateTime}}</td>
                       <td>{{$v.Quotas}}</td>
                       <td>{{$v.MarketValue}}</td>
                       <td>{{$v.NetValue}}</td>                     

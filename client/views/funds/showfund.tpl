@@ -48,7 +48,7 @@
                           </div>
                           <div class="col-md-12">
                             <ul class="p-info">
-                              <div class="desk">{{.myfund.CreatTime}}</div>
+                              <div class="desk">{{.myfund.CreateTime}}</div>
                             </ul>
                           </div>
                         </tr>
@@ -58,7 +58,7 @@
                       <div class="col-md-2">
                         <div class="row">
                           <div class="col-md-12">
-                            <h5>规模(亿份)</h5>
+                            <h5>规模(份)</h5>
                           </div>
                           <div class="col-md-12">
                             <ul class="p-info">
@@ -72,7 +72,7 @@
                       <div class="col-md-3">
                         <div class="row">
                           <div class="col-md-12">
-                            <h5>市值(亿元)</h5>
+                            <h5>市值(元)</h5>
                           </div>
                           <div class="col-md-12">
                             <ul class="p-info">
@@ -183,7 +183,7 @@
                           <div class="row">
                             <div class="col-md-12" style="height:8px;"></div>
                             <div class="col-md-12">
-                              <p>投资金额：<lable class="pull-right" name="myaccount">可用余额：{{.myaccount}}</lable></p>
+                              <p>投资金额：<lable class="pull-right" name="myaccount">可用余额：{{.myfund.MyBalance}}</lable></p>
                             </div>
                             <div class="col-md-12">
                               <form class="form-horizontal adminex-form" id="buyfund-form">
@@ -191,7 +191,7 @@
                                 <input type="hidden" name="netvalue" value="{{.myfund.NetValue}}">
                                 <div class="form-group">
                                   <div class="col-md-12">
-                                    <input type="text" name="buycount" class="form-control" placeholder="请填投资金额">
+                                    <input type="text" name="buycount" class="form-control" placeholder="请填购买份额">
                                   </div>
                                   <div class="col-md-12" style="height:8px;"></div>
                                   <div class="col-md-12">
@@ -287,8 +287,8 @@
                     <li>
                       <div>
                         <i class="fa fa-caret-right" aria-hidden="true"></i>
-                        <a href="#">{{$v.Title}}</a>
-                        <div class="pull-right text-muted">{{$v.PublishTime}}</div>
+                        <a href="#">{{$v.News}}</a>
+                        <div class="pull-right text-muted">{{$v.Date}}</div>
                       </div>
                     </li>
                     {{end}}
@@ -322,7 +322,8 @@ $(function(){
 		$('#notice-box').html($(e.relatedTarget).attr('data-content'))
 	});
 
-  $.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=aapl-c.json&callback=?', function (data) {
+  //$.getJSON('https://www.highcharts.com/samples/data/jsonp.php?filename=aapl-c.json&callback=?', function (data) {
+    
         // Global options
         Highcharts.setOptions({
             lang:{
@@ -376,7 +377,7 @@ $(function(){
 
             series: [{
                 name: '净值',
-                data: data,
+                data: {{$.netLog}},
                 type: 'areaspline',
                 threshold: null,
                 tooltip: {
@@ -397,7 +398,7 @@ $(function(){
                 }
             }]
         });
-    });
+   // });
 })
 </script>
 </body>

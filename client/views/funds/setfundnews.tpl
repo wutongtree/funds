@@ -26,54 +26,30 @@
       <div class="row">
         <div class="col-sm-12">
           <section class="panel">
-            <header class="panel-heading"> 设置基金限制
+            <header class="panel-heading"> 设置基金公告
               <span class="tools pull-right"><a href="/funds/manage" class="fa fa-chevron-down">基金管理</a>
               </span>
             </header>
             <div class="panel-body">
-              <form class="form-horizontal adminex-form" id="setfundthreshhold-form">
+              <form class="form-horizontal adminex-form" id="setfundnews-form">
                 <div class="form-group">
                   <label class="col-sm-2 col-sm-2 control-label">基金名称</label>
                   <div class="col-sm-10">
-                    <input type="text" name="fundname" class="form-control" readonly value="{{.fund.Name}}">
+                    <input type="text" name="fundname" class="form-control" readonly value="{{.fundname}}"></input>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="col-sm-2 col-sm-2 control-label">注册资金</label>
+                  <label class="col-sm-2 col-sm-2 control-label">基金公告</label>
                   <div class="col-sm-10">
-                    <input type="text" name="tbalance" class="form-control" value="{{.fund.PartnerAssets}}">
+                    <input type="text" name="news" class="form-control" value=""></input>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label class="col-sm-2 col-sm-2 control-label">注册时间</label>
-                  <div class="col-sm-10">
-                    <input type="text" name="ttime" class="form-control" value="{{.fund.PartnerTime}}">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="col-sm-2 col-sm-2 control-label">入购起点</label>
-                  <div class="col-sm-10">
-                    <input type="text" name="tcount" class="form-control" value="{{.fund.BuyStart}}">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="col-sm-2 col-sm-2 control-label">限购单量</label>
-                  <div class="col-sm-10">
-                    <input type="text" name="tbuyper" class="form-control" value="{{.fund.BuyPer}}">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="col-sm-2 col-sm-2 control-label">限购总量</label>
-                  <div class="col-sm-10">
-                    <input type="text" name="tbuyall" class="form-control" value="{{.fund.BuyAll}}">
-                  </div>
-                </div>
-
+                
                 <div class="form-group">
                   <label class="col-lg-2 col-sm-2 control-label"></label>
                   <div class="col-lg-10">
                     <input type="hidden" name="id" value="{{.pro.Id}}">
-                    <button type="submit" class="btn btn-primary">设置基金限制</button>
+                    <button type="submit" class="btn btn-primary">设置基金公告</button>
                   </div>
                 </div>
               </form>

@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"strconv"
+	"time"
 
 	"github.com/wutongtree/funds/client/models"
 )
@@ -12,8 +12,8 @@ type FundsController struct {
 }
 
 func (c *FundsController) ListMyFunds() {
-	userid := c.UserUserId
-	_, funds, _ := models.ListMyFunds(userid, 1, 100)
+	_, funds, _ := models.ListMyFunds(c.UserUserId, 1, 100)
+
 	c.Data["funds"] = funds
 	c.Data["countFunds"] = len(funds)
 
@@ -23,152 +23,119 @@ func (c *FundsController) ListMyFunds() {
 func (c *FundsController) GetFund() {
 	fundid := c.GetString(":id")
 	c.Data["fundid"] = fundid
-	fmt.Printf("fundid: %v\n", fundid)
-
-	// 余额
-	userid := c.UserUserId
 
 	// 我的基金
-	myfund, _ := models.GetMyFund(userid, fundid)
+	myappfund, _ := models.GetMyFund(c.UserUserId, fundid)
+	fund, _ := models.GetFund(fundid)
+
+	myfund := models.MyFund{
+		Fund: models.Fund{Id: fund.Name,
+			Name:           fund.Name,
+			CreateTime:     time.Unix(fund.CreateTime, 0).Format("2006-01-02"),
+			Quotas:         float64(fund.Funds),
+			MarketValue:    float64(fund.Net * fund.Funds),
+			NetValue:       float64(fund.Net),
+			NetDelta:       "+0.001|0.94%",
+			ThresholdValue: float64(fund.Net * fund.BuyPer / 100),
+		},
+		MyQuotas:      float64(myappfund.Fund),
+		MyMarketValue: float64(myappfund.Fund * fund.Net),
+		MyBalance:     float64(myappfund.Assets),
+	}
+
 	c.Data["myfund"] = myfund
 	fmt.Printf("GetFund: %v\n", myfund)
 
-	// 余额
-	// _, c.Data["myaccount"] = models.GetMyAccount(userid)
-	c.Data["myaccount"] = myfund.MyBalance
-
 	// 净值走势
+	netLog, _ := models.GetNetLog(fundid)
+	c.Data["netLog"] = netLog
+	fmt.Printf("GetNetLog: %v\n", netLog)
 
 	// 市场动态
-	_, markets := models.GetFundMarkets(fundid)
+	markets := models.GetFundMarkets(fund.LatestTx)
 	c.Data["markets"] = markets
 
 	// 基金公告
-	_, notices := models.GetFundNotices(fundid)
+	_, notices := models.GetFundNews(fundid)
 	c.Data["notices"] = notices
 
 	c.TplName = "funds/showfund.tpl"
 }
 
-func (c *FundsController) GetMyFund() {
-	fundid := c.GetString("fundid")
-	fmt.Printf("GetMyFund fundid: %v\n", fundid)
+// func (c *FundsController) GetMyFund() {
+// 	fundid := c.GetString("fundid")
+// 	fmt.Printf("GetMyFund fundid: %v\n", fundid)
 
-	userid := c.UserUserId
+// 	userid := c.UserUserId
 
-	// 获取净值
-	netvalue, err := c.GetFloat("netvalue")
-	if err != nil {
-		logger.Errorf("netvalue GetFloat error: %v", err)
+// 	// 获取净值
+// 	netvalue, err := c.GetFloat("netvalue")
+// 	if err != nil {
+// 		logger.Errorf("netvalue GetFloat error: %v", err)
 
-		netvalue = 1
-	}
+// 		netvalue = 1
+// 	}
 
-	// 我的基金
-	myfund, _ := models.GetMyFund(userid, fundid)
+// 	// 我的基金
+// 	myfund, _ := models.GetMyFund(userid, fundid)
 
-	c.Data["json"] = map[string]interface{}{"code": 0, "myaccount": myfund.MyBalance, "myquotas": myfund.MyQuotas, "mymarketvalue": myfund.MyQuotas * netvalue}
-	c.ServeJSON()
-}
+// 	c.Data["json"] = map[string]interface{}{"code": 0, "myaccount": myfund.MyBalance, "myquotas": myfund.MyQuotas, "mymarketvalue": myfund.MyQuotas * netvalue}
+// 	c.ServeJSON()
+// }
 
 func (c *FundsController) BuyFund() {
-	userid := c.UserUserId
 	fundid := c.GetString("fundid")
 
 	// 获取购买金额
-	buycount, err := c.GetFloat("buycount")
-	fmt.Printf("%v buycount: %v-%v\n", userid, fundid, buycount)
+	buycount, err := c.GetInt64("buycount")
 	if err != nil {
-		logger.Errorf("buycount GetFloat error: %v", err)
+		logger.Errorf("buycount GetInt64 error: %v", err)
 
-		c.Data["json"] = map[string]interface{}{"code": 1, "message": "购买失败：" + err.Error()}
+		c.Data["json"] = map[string]interface{}{"code": 0, "message": "购买失败：" + err.Error()}
 		c.ServeJSON()
 
 		return
-	}
-
-	// 获取净值
-	netvalue, err := c.GetFloat("netvalue")
-	if err != nil {
-		logger.Errorf("netvalue GetFloat error: %v", err)
-
-		netvalue = 1
 	}
 
 	// 购买基金
-	err = models.BuyFund(userid, fundid, buycount/netvalue)
+	err = models.BuyFund(c.UserUserId, fundid, buycount)
 	if err != nil {
 		logger.Errorf("BuyFund error: %v", err)
 
-		c.Data["json"] = map[string]interface{}{"code": 1, "message": "购买失败：" + err.Error()}
+		c.Data["json"] = map[string]interface{}{"code": 0, "message": "购买失败：" + err.Error()}
 		c.ServeJSON()
 
 		return
 	}
 
-	// 获取持有份额
-	myquotas, err := c.GetFloat("myquotas")
-	if err != nil {
-		logger.Errorf("myquotas ParseFloat error: %v", err)
-
-		myquotas = 0
-	}
-
-	// 获取参考市值
-	mymarketvalue, err := c.GetFloat("mymarketvalue")
-	if err != nil {
-		logger.Errorf("mymarketvalue ParseFloat error: %v", err)
-
-		myquotas = 0
-	}
-
-	// 获取可用余额
-	myaccount, err := c.GetFloat("myaccount")
-	if err != nil {
-		logger.Errorf("myaccount ParseFloat error: %v", err)
-
-		myquotas = 0
-	}
-
-	// 获取可用份额
-
-	logger.Infof("buycount=%v netvalue=%v myquotas=%v mymarketvalue=%v myaccount=%v", buycount, netvalue, myquotas, mymarketvalue, myaccount)
-
-	// 更新数据
-	c.Data["myaccount"] = myaccount - buycount
-
-	c.Data["json"] = map[string]interface{}{"code": 0, "message": "购买成功：" + fmt.Sprintf("%v", buycount)}
+	c.Data["json"] = map[string]interface{}{"code": 1, "message": "购买成功：" + fmt.Sprintf("%v", buycount)}
 	c.ServeJSON()
 }
 
 func (c *FundsController) RedeemFund() {
-	userid := c.UserUserId
 	fundid := c.GetString("fundid")
 
-	redeemcount := c.GetString("redeemcount")
-	fmt.Printf("%v redeemcount: %v-%v\n", userid, fundid, redeemcount)
-
-	quotas, err := strconv.ParseFloat(redeemcount, 64)
+	redeemcount, err := c.GetInt64("redeemcount")
 	if err != nil {
-		logger.Errorf("ParseFloat error: %v", err)
+		logger.Errorf("RedeemFund GetInt64 error: %v", err)
 
-		c.Data["json"] = map[string]interface{}{"code": 1, "message": "赎回失败：" + err.Error()}
+		c.Data["json"] = map[string]interface{}{"code": 0, "message": "赎回失败：" + err.Error()}
 		c.ServeJSON()
 
 		return
 	}
 
 	// 赎回基金
-	err = models.RedeemFund(userid, fundid, quotas)
+	err = models.RedeemFund(c.UserUserId, fundid, redeemcount*-1)
 	if err != nil {
 		logger.Errorf("ParseFloat error: %v", err)
 
-		c.Data["json"] = map[string]interface{}{"code": 1, "message": "赎回失败：" + err.Error()}
+		c.Data["json"] = map[string]interface{}{"code": 0, "message": "赎回失败：" + err.Error()}
 		c.ServeJSON()
 
 		return
 	}
-	c.Data["json"] = map[string]interface{}{"code": 0, "message": "赎回成功：" + redeemcount}
+	c.Data["json"] = map[string]interface{}{"code": 1, "message": "赎回成功：" + fmt.Sprintf("%v", redeemcount)}
 	c.ServeJSON()
 }
 
@@ -178,7 +145,6 @@ func (c *FundsController) GetNewFund() {
 }
 
 func (c *FundsController) CreateNewFund() {
-	userid := c.UserUserId
 
 	fundname := c.GetString("fundname")
 	quotas, err := c.GetFloat("quotas")
@@ -255,7 +221,7 @@ func (c *FundsController) CreateNewFund() {
 	}
 
 	// 新建基金
-	err = models.CreateNewFund(userid, fundname, quotas, balance, tbalance, ttime, tcount, tbuyper, tbuyall, netvalue)
+	err = models.CreateNewFund(c.UserUserId, fundname, quotas, balance, tbalance, ttime, tcount, tbuyper, tbuyall, netvalue)
 	if err != nil {
 		logger.Errorf("ParseFloat error: %v", err)
 
@@ -269,8 +235,7 @@ func (c *FundsController) CreateNewFund() {
 }
 
 func (c *FundsController) ManageFund() {
-	userid := c.UserUserId
-	_, funds, _ := models.ListMyFunds(userid, 1, 100)
+	_, funds, _ := models.ListMyFunds(c.UserUserId, 1, 100)
 	c.Data["funds"] = funds
 	c.Data["countFunds"] = len(funds)
 
@@ -278,28 +243,30 @@ func (c *FundsController) ManageFund() {
 }
 
 func (c *FundsController) FundNetvalue() {
-	userid := c.UserUserId
-
 	fundname := c.GetString(":id")
-	fund, _ := models.GetFund(userid, fundname)
+	fund, _ := models.GetFund(fundname)
 	c.Data["fund"] = fund
 
 	c.TplName = "funds/setfundnetvalue.tpl"
 }
 
 func (c *FundsController) FundThreshhold() {
-	userid := c.UserUserId
-
 	fundname := c.GetString(":id")
-	fund, _ := models.GetFund(userid, fundname)
+
+	fund, _ := models.GetFund(fundname)
 	c.Data["fund"] = fund
 
 	c.TplName = "funds/setfundthreshhold.tpl"
 }
 
-func (c *FundsController) SetFundNetvalue() {
-	userid := c.UserUserId
+func (c *FundsController) FundNews() {
+	fundname := c.GetString(":id")
+	c.Data["fundname"] = fundname
 
+	c.TplName = "funds/setfundnews.tpl"
+}
+
+func (c *FundsController) SetFundNetvalue() {
 	fundname := c.GetString("fundname")
 	netvalue, err := c.GetFloat("netvalue")
 	if err != nil {
@@ -312,7 +279,7 @@ func (c *FundsController) SetFundNetvalue() {
 	}
 
 	// 设置基金净值
-	err = models.SetFundNetvalue(userid, fundname, netvalue)
+	err = models.SetFundNetvalue(c.UserUserId, fundname, netvalue)
 	if err != nil {
 		logger.Errorf("ParseFloat error: %v", err)
 
@@ -326,8 +293,6 @@ func (c *FundsController) SetFundNetvalue() {
 }
 
 func (c *FundsController) SetFundThreshhold() {
-	userid := c.UserUserId
-
 	fundname := c.GetString("fundname")
 	tbalance, err := c.GetFloat("tbalance")
 	if err != nil {
@@ -376,7 +341,7 @@ func (c *FundsController) SetFundThreshhold() {
 	}
 
 	// 设置基金限制
-	err = models.SetFundThreshhold(userid, fundname, tbalance, ttime, tcount, tbuyper, tbuyall)
+	err = models.SetFundThreshhold(c.UserUserId, fundname, tbalance, ttime, tcount, tbuyper, tbuyall)
 	if err != nil {
 		logger.Errorf("ParseFloat error: %v", err)
 
@@ -386,5 +351,21 @@ func (c *FundsController) SetFundThreshhold() {
 		return
 	}
 	c.Data["json"] = map[string]interface{}{"code": 1, "message": "设置基金限制成功：" + fundname}
+	c.ServeJSON()
+}
+
+func (c *FundsController) SetFundNews() {
+	fundname := c.GetString("fundname")
+	news := c.GetString("news")
+
+	// 设置基金净值
+	err := models.SetFundNews(c.UserUserId, fundname, news)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{"code": 0, "message": "设置基金公告失败：" + err.Error()}
+		c.ServeJSON()
+
+		return
+	}
+	c.Data["json"] = map[string]interface{}{"code": 1, "message": "设置基金公告成功：" + fundname}
 	c.ServeJSON()
 }

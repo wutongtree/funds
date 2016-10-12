@@ -3,12 +3,17 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Fund struct {
 	Id             string  `json:"Id,omitempty"`
 	Name           string  `json:"Name,omitempty"`
-	CreatTime      string  `json:"CreatTime,omitempty"`
+	CreateTime     string  `json:"CreateTime,omitempty"`
 	Quotas         float64 `json:"Quotas,omitempty"`
 	MarketValue    float64 `json:"MarketValue,omitempty"`
 	NetValue       float64 `json:"NetValue,omitempty"`
@@ -25,13 +30,8 @@ type MyFund struct {
 
 type FundMarket struct {
 	Index int
-	Size  float64
+	Size  int64
 	Type  string
-}
-
-type FundNotice struct {
-	Title       string
-	PublishTime string
 }
 
 // ---------- struct with app ------------
@@ -54,18 +54,23 @@ type AppFund struct {
 	BuyPer        int    `protobuf:"bytes,1,opt,name=buyPer" json:"buyPer,omitempty"`
 	BuyAll        int    `protobuf:"bytes,1,opt,name=buyAll" json:"buyAll,omitempty"`
 	Net           int    `protobuf:"bytes,1,opt,name=net" json:"net,omitempty"`
+	CreateTime    int64  `protobuf:"bytes,1,opt,name=createTime" json:"createTime,omitempty"`
+	UpdateTime    int64  `protobuf:"bytes,1,opt,name=updateTime" json:"updateTime,omitempty"`
+	LatestTx      string `protobuf:"bytes,1,opt,name=latestTx" json:"latestTx,omitempty"`
 }
 
 // AppFundsResponse AppFundsResponse
 type AppFundsResponse struct {
 	Status string    `json:"status,omitempty"`
-	Msg    []AppFund `json:"msg,omitempty"`
+	Msg    string    `json:"msg,omitempty"`
+	Result []AppFund `json:"result,omitempty"`
 }
 
 // AppFundResponse AppFundResponse
 type AppFundResponse struct {
 	Status string  `json:"status,omitempty"`
-	Msg    AppFund `json:"msg,omitempty"`
+	Msg    string  `json:"msg,omitempty"`
+	Result AppFund `json:"result,omitempty"`
 }
 
 // AppMyFund AppMyFund
@@ -79,14 +84,15 @@ type AppMyFund struct {
 // AppMyFundResponse AppMyFundResponse
 type AppMyFundResponse struct {
 	Status string    `json:"status,omitempty"`
-	Msg    AppMyFund `json:"msg,omitempty"`
+	Msg    string    `json:"msg,omitempty"`
+	Result AppMyFund `json:"result,omitempty"`
 }
 
 // AppTransfterFundRequest AppTransfterFundRequest
 type AppTransfterFundRequest struct {
 	EnrollID string `json:"enrollID,omitempty"`
 	Name     string `json:"name,omitempty"`
-	Funds    int    `json:"funds,omitempty"`
+	Funds    int64  `json:"funds,omitempty"`
 }
 
 // AppTransfterFundResponse AppTransfterFundResponse
@@ -128,6 +134,19 @@ type AppSetFundNetvalueResponse struct {
 	Msg    string `json:"msg,omitempty"`
 }
 
+//AppSetFundNewsRequest AppSetFundNewsRequest
+type AppSetFundNewsRequest struct {
+	EnrollID string `json:"enrollID,omitempty"`
+	Name     string `json:"name,omitempty"`
+	News     string `json:"news,omitempty"`
+}
+
+// AppSetFundNetvalueResponse AppSetFundNetvalueResponse
+type AppSetFundNewsResponse struct {
+	Status string `json:"status,omitempty"`
+	Msg    string `json:"msg,omitempty"`
+}
+
 // AppSetFundThreshholdRequest AppSetFundThreshholdRequest
 type AppSetFundThreshholdRequest struct {
 	EnrollID      string `json:"enrollID,omitempty"`
@@ -145,9 +164,36 @@ type AppSetFundThreshholdResponse struct {
 	Msg    string `json:"msg,omitempty"`
 }
 
+// FundNetLog FundNetLog
+type FundNetLog struct {
+	Name string `json:"name"`
+	Time int64  `json:"time"`
+	Net  int64  `json:"net"`
+}
+
+// AppNetLogResponse AppNetLogResponse
+type AppNetLogResponse struct {
+	Status string       `json:"status,omitempty"`
+	Msg    string       `json:"msg,omitempty"`
+	Result []FundNetLog `json:"result,omitempty"`
+}
+
+type FundNews struct {
+	Name string `json:"name"`
+	News string `json:"news"`
+	Time int64  `json:"time"`
+	Date string `json:"date,omitempty"`
+}
+
+// AppNetLogResponse AppNetLogResponse
+type AppNewsResponse struct {
+	Status string     `json:"status,omitempty"`
+	Msg    string     `json:"msg,omitempty"`
+	Result []FundNews `json:"result,omitempty"`
+}
+
 // ListMyFunds ListMyFunds
 func ListMyFunds(userId string, page int, offset int) (nums int, funds []Fund, err error) {
-	err = nil
 
 	// Get fund
 	urlstr := getHTTPURL("funds")
@@ -158,7 +204,7 @@ func ListMyFunds(userId string, page int, offset int) (nums int, funds []Fund, e
 	}
 
 	logger.Debugf("ListMyFunds: url=%v response=%v", urlstr, string(response))
-
+	logger.Debug(string(response))
 	var result AppFundsResponse
 	err = json.Unmarshal(response, &result)
 	if err != nil {
@@ -172,11 +218,11 @@ func ListMyFunds(userId string, page int, offset int) (nums int, funds []Fund, e
 	}
 
 	// result
-	for _, v := range result.Msg {
+	for _, v := range result.Result {
 		fund := Fund{
 			Id:          v.Name,
 			Name:        v.Name,
-			CreatTime:   "2016-09-19",
+			CreateTime:  time.Unix(v.CreateTime, 0).Format("2006-01-02"),
 			Quotas:      float64(v.Funds),
 			MarketValue: float64(v.Funds * v.Net),
 			NetValue:    float64(v.Net),
@@ -190,11 +236,32 @@ func ListMyFunds(userId string, page int, offset int) (nums int, funds []Fund, e
 }
 
 // GetMyFund GetMyFund
-func GetMyFund(userId string, fundid string) (myfund MyFund, err error) {
-	err = nil
+func GetMyFund(userId string, fundid string) (myfund AppMyFund, err error) {
 
-	// Get fund
-	urlstr := getHTTPURL("fund/" + fundid)
+	// // Get fund
+	// urlstr := getHTTPURL("fund/" + fundid)
+	// response, err := performHTTPGet(urlstr)
+	// if err != nil {
+	// 	logger.Errorf("GetMyFund failed: %v", err)
+	// 	return
+	// }
+
+	// logger.Debugf("GetMyFund: url=%v response=%v", urlstr, string(response))
+
+	// var resultAppFund AppFundResponse
+	// err = json.Unmarshal(response, &resultAppFund)
+	// if err != nil {
+	// 	logger.Errorf("GetMyFund failed: %v", err)
+	// 	return
+	// }
+
+	// if resultAppFund.Status != "OK" {
+	// 	logger.Errorf("GetMyFund failed: %v", resultAppFund.Status)
+	// 	return
+	// }
+
+	// Get My fund
+	urlstr := getHTTPURL("user/" + fundid + "/" + userId)
 	response, err := performHTTPGet(urlstr)
 	if err != nil {
 		logger.Errorf("GetMyFund failed: %v", err)
@@ -203,59 +270,25 @@ func GetMyFund(userId string, fundid string) (myfund MyFund, err error) {
 
 	logger.Debugf("GetMyFund: url=%v response=%v", urlstr, string(response))
 
-	var resultAppFund AppFundResponse
-	err = json.Unmarshal(response, &resultAppFund)
-	if err != nil {
-		logger.Errorf("GetMyFund failed: %v", err)
-		return
-	}
-
-	if resultAppFund.Status != "OK" {
-		logger.Errorf("GetMyFund failed: %v", resultAppFund.Status)
-		return
-	}
-
-	// Get My fund
-	urlstr = getHTTPURL("user/" + fundid + "/" + userId)
-	response, err = performHTTPGet(urlstr)
-	if err != nil {
-		logger.Errorf("GetMyFund failed: %v", err)
-		return
-	}
-
-	logger.Debugf("GetMyFund: url=%v response=%v", urlstr, string(response))
-
-	myfund = MyFund{
-		MyQuotas:      0,
-		MyMarketValue: 0,
-		MyBalance:     0,
-	}
-
 	var resultAppMyFund AppMyFundResponse
 	err = json.Unmarshal(response, &resultAppMyFund)
 	if err != nil {
 		logger.Errorf("GetMyFund failed: %v", err)
-	} else {
-		myfund.MyQuotas = float64(resultAppMyFund.Msg.Fund)
-		myfund.MyMarketValue = float64(resultAppMyFund.Msg.Fund * resultAppFund.Msg.Net)
-		myfund.MyBalance = float64(resultAppMyFund.Msg.Assets)
+		return
 	}
 
-	myfund.Id = resultAppFund.Msg.Name
-	myfund.Name = resultAppFund.Msg.Name
-	myfund.CreatTime = "2016-09-19"
-	myfund.Quotas = float64(resultAppFund.Msg.Funds)
-	myfund.MarketValue = float64(resultAppFund.Msg.Net * resultAppFund.Msg.Funds)
-	myfund.NetValue = float64(resultAppFund.Msg.Net)
-	myfund.NetDelta = "+0.001|0.94%"
-	myfund.ThresholdValue = float64(resultAppFund.Msg.Net * resultAppFund.Msg.BuyPer)
+	if resultAppMyFund.Status != "OK" {
+		logger.Errorf("GetFund failed: %v", resultAppMyFund.Status)
+		return
+	}
+
+	myfund = resultAppMyFund.Result
 
 	return
 }
 
 // GetFund GetFund
-func GetFund(userId string, fundid string) (fund AppFund, err error) {
-	err = nil
+func GetFund(fundid string) (fund AppFund, err error) {
 
 	// Get fund
 	urlstr := getHTTPURL("fund/" + fundid)
@@ -278,106 +311,112 @@ func GetFund(userId string, fundid string) (fund AppFund, err error) {
 		logger.Errorf("GetFund failed: %v", resultAppFund.Status)
 		return
 	}
+	fund = resultAppFund.Result
 
-	// Get My fund
-	urlstr = getHTTPURL("user/" + fundid + "/" + userId)
-	response, err = performHTTPGet(urlstr)
+	return
+}
+
+// GetNetLog GetNetLog
+func GetNetLog(fundid string) (history [][]int64, err error) {
+
+	// Get fund
+	urlstr := getHTTPURL("netLog/" + fundid)
+	response, err := performHTTPGet(urlstr)
 	if err != nil {
-		logger.Errorf("GetFund failed: %v", err)
+		logger.Errorf("GetNetLog failed: %v", err)
 		return
 	}
 
-	logger.Debugf("GetFund: url=%v response=%v", urlstr, string(response))
-
-	var resultAppMyFund AppMyFundResponse
-	err = json.Unmarshal(response, &resultAppMyFund)
+	logger.Debugf("GetNetLog: url=%v response=%v", urlstr, string(response))
+	logger.Debug(string(response))
+	var result AppNetLogResponse
+	err = json.Unmarshal(response, &result)
 	if err != nil {
-		logger.Errorf("GetFund failed: %v", err)
-	} else {
-		fund = resultAppFund.Msg
+		logger.Errorf("GetNetLog failed: %v", err)
+		return
+	}
+
+	if result.Status != "OK" {
+		logger.Errorf("GetNetLog failed: %v", result.Status)
+		return
+	}
+
+	// result
+	for _, v := range result.Result {
+		history = append(history, []int64{v.Time, v.Net})
 	}
 
 	return
 }
 
-func GetFundMarkets(fundid string) (err error, fundmarkets []FundMarket) {
-	err = nil
+// GetFundMarkets GetFundMarkets
+func GetFundMarkets(latestTx string) (fundmarkets []FundMarket) {
 
-	fundmarket := FundMarket{
-		Index: 1,
-		Size:  1023.0,
-		Type:  "购买",
-	}
-	fundmarkets = append(fundmarkets, fundmarket)
+	latestTxs := strings.Split(latestTx, "|")
 
-	fundmarket = FundMarket{
-		Index: 2,
-		Size:  1024.0,
-		Type:  "购买",
-	}
-	fundmarkets = append(fundmarkets, fundmarket)
+	for k, v := range latestTxs {
+		tx := strings.Split(v, ",")
 
-	fundmarket = FundMarket{
-		Index: 3,
-		Size:  1025.0,
-		Type:  "购买",
-	}
-	fundmarkets = append(fundmarkets, fundmarket)
+		if len(tx) != 3 {
+			continue
+		}
 
-	fundmarket = FundMarket{
-		Index: 4,
-		Size:  1026.0,
-		Type:  "购买",
+		size, _ := strconv.ParseInt(tx[1], 10, 64)
+		fundmarket := FundMarket{
+			Index: k + 1,
+			Size:  int64(math.Abs(float64(size))),
+		}
+		if size > 0 {
+			fundmarket.Type = "购买"
+		} else if size < 0 {
+			fundmarket.Type = "赎回"
+		}
+		fundmarkets = append(fundmarkets, fundmarket)
 	}
-	fundmarkets = append(fundmarkets, fundmarket)
-
-	fundmarket = FundMarket{
-		Index: 5,
-		Size:  1023.0,
-		Type:  "赎回",
-	}
-	fundmarkets = append(fundmarkets, fundmarket)
 
 	return
 }
 
-func GetFundNotices(fundid string) (err error, fundnotices []FundNotice) {
-	err = nil
-
-	fundnotice := FundNotice{
-		Title:       "科瑞基金关于旗下部分产品增加农商银行为代销机构的公告",
-		PublishTime: "2016-08-12",
+func GetFundNews(fundid string) (err error, news []FundNews) {
+	// Get fund
+	urlstr := getHTTPURL("news/" + fundid)
+	response, err := performHTTPGet(urlstr)
+	if err != nil {
+		logger.Errorf("GetNews failed: %v", err)
+		return
 	}
-	fundnotices = append(fundnotices, fundnotice)
 
-	fundnotice = FundNotice{
-		Title:       "科瑞基金关于旗下部分产品增加农商银行为代销机构的公告",
-		PublishTime: "2016-08-12",
+	logger.Debugf("GetNews: url=%v response=%v", urlstr, string(response))
+	logger.Debug(string(response))
+	var result AppNewsResponse
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		logger.Errorf("GetNews failed: %v", err)
+		return
 	}
-	fundnotices = append(fundnotices, fundnotice)
 
-	fundnotice = FundNotice{
-		Title:       "科瑞基金关于旗下部分产品增加农商银行为代销机构的公告",
-		PublishTime: "2016-08-12",
+	if result.Status != "OK" {
+		logger.Errorf("GetNews failed: %v", result.Status)
+		return
 	}
-	fundnotices = append(fundnotices, fundnotice)
 
-	fundnotice = FundNotice{
-		Title:       "科瑞基金关于旗下部分产品增加农商银行为代销机构的公告",
-		PublishTime: "2016-08-12",
+	news = result.Result
+	sort.Sort(NewsByTime(news))
+	news = []FundNews(result.Result)
+
+	for k, v := range news {
+		news[k].Date = time.Unix(v.Time, 0).Format("2006-01-02 15:04:05")
 	}
-	fundnotices = append(fundnotices, fundnotice)
-
 	return
 }
 
-func BuyFund(userId string, fundid string, amount float64) error {
+func BuyFund(userId string, fundid string, amount int64) error {
 	// Buy fund
 	urlstr := getHTTPURL("transfer")
 	request := AppTransfterFundRequest{
 		EnrollID: userId,
 		Name:     fundid,
-		Funds:    int(amount),
+		Funds:    amount,
 	}
 
 	reqBody, err := json.Marshal(request)
@@ -407,13 +446,13 @@ func BuyFund(userId string, fundid string, amount float64) error {
 	return nil
 }
 
-func RedeemFund(userId string, fundid string, quotas float64) error {
+func RedeemFund(userId string, fundid string, quotas int64) error {
 	// Redeem fund
 	urlstr := getHTTPURL("transfer")
 	request := AppTransfterFundRequest{
 		EnrollID: userId,
 		Name:     fundid,
-		Funds:    int(quotas) * -1,
+		Funds:    quotas,
 	}
 
 	reqBody, err := json.Marshal(request)
@@ -581,3 +620,46 @@ func SetFundThreshhold(
 
 	return nil
 }
+
+//SetFundNew SetFundNew
+func SetFundNews(userId, fundid, news string) error {
+	urlstr := getHTTPURL("setnews")
+	request := AppSetFundNewsRequest{
+		Name: fundid,
+		News: news,
+	}
+
+	reqBody, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	response, err := performHTTPPost(urlstr, reqBody)
+	if err != nil {
+		logger.Errorf("SetFundNews failed: %v", err)
+		return err
+	}
+
+	logger.Debugf("SetFundNews: url=%v request=%v response=%v", urlstr, request, string(response))
+
+	var result AppSetFundNetvalueResponse
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		logger.Errorf("SetFundNews failed: %v", err)
+		return err
+	}
+
+	if result.Status != "OK" {
+		logger.Errorf("SetFundNews failed: %v", result.Status)
+		return fmt.Errorf(result.Msg)
+	}
+
+	return nil
+}
+
+// 对公告按时间排序
+
+type NewsByTime []FundNews
+
+func (x NewsByTime) Len() int           { return len(x) }
+func (x NewsByTime) Less(i, j int) bool { return x[i].Time > x[j].Time }
+func (x NewsByTime) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
