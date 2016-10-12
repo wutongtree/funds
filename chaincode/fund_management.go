@@ -613,7 +613,7 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	tx := strings.Split(latestTx, "|")
 	if len := len(tx); len > 0 {
 		if len >= 10 {
-			tx[len-1] = ""
+			tx = tx[0:10]
 		}
 		//用户名，交易额，交易时间
 		latestTx = strings.Join(tx, "|")
