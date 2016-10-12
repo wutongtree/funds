@@ -579,43 +579,40 @@ func (t *FundManagementChaincode) transferFund(stub shim.ChaincodeStubInterface,
 	fundInfRow.Columns[1].Value = &shim.Column_Int64{Int64: sysFunds}
 	fundInfRow.Columns[2].Value = &shim.Column_Int64{Int64: sysAsset}
 	fundInfRow.Columns[10].Value = &shim.Column_Int64{Int64: time.Now().Unix()}
-	return nil, errors.New("赎回失败，系统资金不足或者赎回数量超出用户基金数")
-	// _, err = stub.ReplaceRow("FundInfo", *fundInfRow)
-	// if err != nil {
-	// 	myLogger.Errorf("failed update fundinfo:%s", err)
-	// 	return nil, fmt.Errorf("failed update fundinfo:%s", err)
-	// }
 
-	// userRow.Columns[1].Value = &shim.Column_Int64{Int64: userAsset}
-	// _, err = stub.ReplaceRow("Account", *userRow)
-	// if err != nil {
-	// 	myLogger.Errorf("failed update user info:%s", err)
-	// 	return nil, fmt.Errorf("failed update fund info:%s", err)
-	// }
+	_, err = stub.ReplaceRow("FundInfo", *fundInfRow)
+	if err != nil {
+		myLogger.Errorf("failed update fundinfo:%s", err)
+		return nil, fmt.Errorf("failed update fundinfo:%s", err)
+	}
 
-	// if len(userFundRow.Columns) > 0 {
-	// 	return nil, fmt.Errorf("wwwwwwwww")
+	userRow.Columns[1].Value = &shim.Column_Int64{Int64: userAsset}
+	_, err = stub.ReplaceRow("Account", *userRow)
+	if err != nil {
+		myLogger.Errorf("failed update user info:%s", err)
+		return nil, fmt.Errorf("failed update fund info:%s", err)
+	}
 
-	// 	userFundRow.Columns[2].Value = &shim.Column_Int64{Int64: userFunds}
-	// 	_, err = stub.ReplaceRow("AccountFund", *userRow)
-	// 	if err != nil {
-	// 		myLogger.Errorf("failed update user fund info:%s", err)
-	// 		return nil, fmt.Errorf("failed update user fund info:%s", err)
-	// 	}
-	// } else {
-	// 	return nil, fmt.Errorf("qqqqqqqq")
-	// 	_, err = stub.InsertRow("AccountFund", shim.Row{
-	// 		Columns: []*shim.Column{
-	// 			&shim.Column{Value: &shim.Column_String_{String_: fundName}},
-	// 			&shim.Column{Value: &shim.Column_String_{String_: owner}},
-	// 			&shim.Column{Value: &shim.Column_Int64{Int64: fundCount}},
-	// 		},
-	// 	})
-	// 	if err != nil {
-	// 		myLogger.Errorf("failed update user fund info:%s", err)
-	// 		return nil, fmt.Errorf("failed update user fund info:%s", err)
-	// 	}
-	// }
+	if len(userFundRow.Columns) > 0 {
+		userFundRow.Columns[2].Value = &shim.Column_Int64{Int64: userFunds}
+		_, err = stub.ReplaceRow("AccountFund", *userRow)
+		if err != nil {
+			myLogger.Errorf("failed update user fund info:%s", err)
+			return nil, fmt.Errorf("failed update user fund info:%s", err)
+		}
+	} else {
+		_, err = stub.InsertRow("AccountFund", shim.Row{
+			Columns: []*shim.Column{
+				&shim.Column{Value: &shim.Column_String_{String_: fundName}},
+				&shim.Column{Value: &shim.Column_String_{String_: owner}},
+				&shim.Column{Value: &shim.Column_Int64{Int64: fundCount}},
+			},
+		})
+		if err != nil {
+			myLogger.Errorf("failed update user fund info:%s", err)
+			return nil, fmt.Errorf("failed update user fund info:%s", err)
+		}
+	}
 
 	myLogger.Debug("transferFund done.")
 	return nil, nil
@@ -773,7 +770,7 @@ func getUserInfo(stub shim.ChaincodeStubInterface, fundName, userCert string) (*
 		userInfo.Fund = rowAccountFund.Columns[2].GetInt64()
 	}
 
-	return userInfo, &rowAccount, nil, nil
+	return userInfo, &rowAccount, &rowAccountFund, nil
 }
 
 //查询基金信息
