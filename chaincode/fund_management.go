@@ -37,19 +37,19 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 
 	//set the admin
 	// the  metadata will contain the certificate of the administrator
-	// adminCert, err := stub.GetCallerMetadata()
-	// if err != nil {
-	// 	myLogger.Debug("Failed getting metadata")
-	// 	return nil, errors.New("Failed getting metadata.")
-	// }
-	// if len(adminCert) == 0 {
-	// 	myLogger.Debug("Invalid admin certificate. Empty.")
-	// 	return nil, errors.New("Invalid admin certificate. Empty.")
-	// }
+	adminCert, err := stub.GetCallerMetadata()
+	if err != nil {
+		myLogger.Debug("Failed getting metadata")
+		return nil, errors.New("Failed getting metadata.")
+	}
+	if len(adminCert) == 0 {
+		myLogger.Debug("Invalid admin certificate. Empty.")
+		return nil, errors.New("Invalid admin certificate. Empty.")
+	}
 
-	// myLogger.Debug("The administrator is [%x]", adminCert)
+	myLogger.Debug("The administrator is [%x]", adminCert)
 
-	// stub.PutState("admin", adminCert)
+	stub.PutState("admin", adminCert)
 
 	myLogger.Debug("Init Chaincode...done")
 
