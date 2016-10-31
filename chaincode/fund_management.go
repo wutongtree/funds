@@ -23,6 +23,7 @@ type FundManagementChaincode struct {
 // The deploy transaction metadata is supposed to contain the administrator cert
 func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Init Chaincode......")
+
 	function, args, _ = dealParam(function, args)
 
 	if len(args) != 0 {
@@ -59,6 +60,7 @@ func (t *FundManagementChaincode) Init(stub shim.ChaincodeStubInterface, functio
 // Invoke will be called for every transaction.
 func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Invoke Chaincode......")
+
 	function, args, _ = dealParam(function, args)
 
 	// Handle different functions
@@ -84,6 +86,7 @@ func (t *FundManagementChaincode) Invoke(stub shim.ChaincodeStubInterface, funct
 // Anyone can invoke this function.
 func (t *FundManagementChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	myLogger.Debug("Query Chaincode....")
+
 	function, args, _ = dealParam(function, args)
 
 	if function == "queryFundInfo" {
