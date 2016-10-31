@@ -464,7 +464,6 @@ func GetViper() *Viper {
 // Get returns an interface. For a specific value use one of the Get____ methods.
 func Get(key string) interface{} { return v.Get(key) }
 func (v *Viper) Get(key string) interface{} {
-	fmt.Println("xxxxxxxxxxxxxxxxxx")
 	path := strings.Split(key, v.keyDelim)
 
 	lcaseKey := strings.ToLower(key)
