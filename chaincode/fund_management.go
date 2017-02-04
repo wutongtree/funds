@@ -811,14 +811,18 @@ func (t *FundManagementChaincode) queryFundInfo(stub shim.ChaincodeStubInterface
 		if err != nil {
 			return nil, err
 		}
-		return json.Marshal(info)
+		js, err := json.Marshal(info)
+		myLogger.Debugf("query fund one:%s", string(js))
+		return js, err
 	} else if queryType == "list" {
 		infos, err := getFundInfoList(stub)
 		if err != nil {
 			return nil, err
 		}
 
-		return json.Marshal(infos)
+		js, err := json.Marshal(infos)
+		myLogger.Debugf("query fund list:%s", string(js))
+		return js, err
 	}
 
 	myLogger.Debug("query fund info done.")
