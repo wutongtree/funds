@@ -285,5 +285,5 @@
 			"revisionTime": "2016-09-13T21:11:50Z"
 		}
 	],
-	"rootPath": "funds/chaincode"
+	"rootPath": "github.com/wutongtree/funds/chaincode"
 }
