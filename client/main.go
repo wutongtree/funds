@@ -35,6 +35,8 @@ func writeHyperledgerExplorer() {
 }
 
 func main() {
+	beego.SetStaticPath("/static", "static")
+	beego.BConfig.WebConfig.DirectoryIndex = true
 	// Write hyperledger explorer config
 	writeHyperledgerExplorer()
 
