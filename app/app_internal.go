@@ -19,11 +19,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric/core/chaincode"
 	"github.com/hyperledger/fabric/core/chaincode/platforms"
-	"github.com/hyperledger/fabric/core/config"
 	"github.com/hyperledger/fabric/core/container"
 	"github.com/hyperledger/fabric/core/crypto"
 	"github.com/hyperledger/fabric/core/peer"
@@ -56,8 +56,21 @@ func initNVP() (err error) {
 	return
 }
 
+func initConfig() {
+	// Now set the configuration file
+	viper.SetEnvPrefix("HYPERLEDGER")
+	viper.AutomaticEnv()
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	viper.SetConfigName("config") // name of config file (without extension)
+	viper.AddConfigPath(".")      // path to look for the config file in
+	err := viper.ReadInConfig()   // Find and read the config file
+	if err != nil {               // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+}
+
 func initPeerClient() (err error) {
-	config.SetupTestConfig(".")
 	viper.Set("ledger.blockchain.deploy-system-chaincode", "false")
 	viper.Set("peer.validator.validity-period.verification", "false")
 

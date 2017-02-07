@@ -2060,6 +2060,8 @@ func buildRESTRouter() *web.Router {
 }
 
 func main() {
+	initConfig()
+
 	logging.SetLevel(logging.DEBUG, "app")
 
 	primitives.SetSecurityLevel("SHA3", 256)
@@ -2074,7 +2076,7 @@ func main() {
 	crypto.Init()
 
 	// Enable fabric 'confidentiality'
-	confidentiality(false)
+	confidentiality(true)
 
 	// Deploy
 	if err := deploy(); err != nil {
