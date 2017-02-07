@@ -2076,7 +2076,7 @@ func main() {
 	crypto.Init()
 
 	// Enable fabric 'confidentiality'
-	confidentiality(true)
+	confidentiality(false)
 
 	// Deploy
 	if err := deploy(); err != nil {
