@@ -274,7 +274,7 @@ chaincode:
     # returned by the system in response to the deploy transaction. In
     # development mode where user runs the chaincode, the name can be any string
     id:
-        path:
+        path: "github.com/wutongtree/funds/chaincode"
         name:
 
     golang:
@@ -467,71 +467,7 @@ statetransfer:
 app:
      # The Address this App will bind to for providing services
     address: 0.0.0.0:8000
-    # Whether the Peer should programmatically determine the address to bind to.
-    # This case is useful for docker containers.
-    addressAutoDetect: false
-
-    # Setting for runtime.GOMAXPROCS(n). If n < 1, it does not change the current setting
-    gomaxprocs: -1
-    workers: 2
-
-    # Setting for notarization. 
-    notarization:
-        # chaincode path
-        chaincodePath: "github.com/wutongtree/notarization/chaincode"
-        deployer: "lukas"
-        deployerSecret: "NPKYL39uKbkj"
-
-    # Sync related configuration
-    sync:
-        blocks:
-            # Channel size for readonly SyncBlocks messages channel for receiving
-            # blocks from oppositie Peer Endpoints.
-            # NOTE: currently messages are not stored and forwarded, but rather
-            # lost if the channel write blocks.
-            channelSize: 10
-        state:
-            snapshot:
-                # Channel size for readonly syncStateSnapshot messages channel
-                # for receiving state deltas for snapshot from oppositie Peer Endpoints.
-                # NOTE: currently messages are not stored and forwarded, but
-                # rather lost if the channel write blocks.
-                channelSize: 50
-            deltas:
-                # Channel size for readonly syncStateDeltas messages channel for
-                # receiving state deltas for a syncBlockRange from oppositie
-                # Peer Endpoints.
-                # NOTE: currently messages are not stored and forwarded,
-                # but rather lost if the channel write blocks.
-                channelSize: 20
-
-    # Validator defines whether this peer is a validating peer or not, and if
-    # it is enabled, what consensus plugin to load
-    validator:
-        enabled: true
-
-        consensus:
-            # Consensus plugin to use. The value is the name of the plugin, e.g. pbft, noops ( this value is case-insensitive)
-            # if the given value is not recognized, we will default to noops
-            plugin: noops
-
-            # total number of consensus messages which will be buffered per connection before delivery is rejected
-            buffersize: 1000
-
-        events:
-            # The address that the Event service will be enabled on the validator
-            address: 0.0.0.0:7053
-
-            # total number of events that could be buffered without blocking the
-            # validator sends
-            buffersize: 100
-
-            # milliseconds timeout for producer to send an event.
-            # if < 0, if buffer full, unblocks immediately and not send
-            # if 0, if buffer full, will block and guarantee the event will be sent out
-            # if > 0, if buffer full, blocks till timeout
-            timeout: 10
-
+   
     # TLS Settings for p2p communications
     tls:
         enabled:  false
@@ -541,59 +477,3 @@ app:
             file: testdata/server1.key
         # The server name use to verify the hostname returned by TLS handshake
         serverhostoverride:
-
-    # PKI member services properties
-    pki:
-        eca:
-            paddr: membersrvc:7054
-        tca:
-            paddr: membersrvc:7054
-        tlsca:
-            paddr: membersrvc:7054
-        tls:
-            enabled: false
-            rootcert:
-                file: tlsca.cert
-            # The server name use to verify the hostname returned by TLS handshake
-            serverhostoverride:
-
-    # Peer discovery settings.  Controls how this peer discovers other peers
-    discovery:
-
-        # The root nodes are used for bootstrapping purposes, and generally
-        # supplied through ENV variables
-        # It can be either a single host or a comma separated list of hosts.
-        rootnode:
-
-        # The duration of time between attempts to asks peers for their connected peers
-        period:  5s
-
-        ## leaving this in for example of sub map entry
-        # testNodes:
-        #    - node   : 1
-        #      ip     : 127.0.0.1
-        #      port   : 7051
-        #    - node   : 2
-        #      ip     : 127.0.0.1
-        #      port   : 7051
-
-        # Should the discovered nodes and their reputations
-        # be stored in DB and persisted between restarts
-        persist:    true
-
-        # the period in seconds with which the discovery
-        # tries to reconnect to successful nodes
-        # 0 means the nodes are not reconnected
-        touchPeriod: 6s
-
-        # the maximum nuber of nodes to reconnect to
-        # -1 for unlimited
-        touchMaxNodes: 100
-
-    # Path on the file system where peer will store data
-    fileSystemPath: /var/hyperledger/production
-
-
-    profile:
-        enabled:     false
-        listenAddress: 0.0.0.0:6060

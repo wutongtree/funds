@@ -125,10 +125,11 @@ func deployInternal() (resp *pb.Response, err error) {
 		return
 	}
 
+	chaincodePath = viper.GetString("chaincode.id.path")
 	// Prepare the spec. The metadata includes the identity of the administrator
 	spec := &pb.ChaincodeSpec{
 		Type:                 pb.ChaincodeSpec_GOLANG,
-		ChaincodeID:          &pb.ChaincodeID{Path: "github.com/wutongtree/funds/chaincode"},
+		ChaincodeID:          &pb.ChaincodeID{Path: chaincodePath},
 		CtorMsg:              &pb.ChaincodeInput{Args: util.ToChaincodeArgs("init")},
 		Metadata:             adminCert.GetCertificate(),
 		ConfidentialityLevel: confidentialityLevel,
