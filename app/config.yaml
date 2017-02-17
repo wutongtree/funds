@@ -466,7 +466,7 @@ statetransfer:
 ###############################################################################
 app:
      # The Address this App will bind to for providing services
-    address: 0.0.0.0:8000
+    address: 0.0.0.0:7060
    
     # TLS Settings for p2p communications
     tls:
