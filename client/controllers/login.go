@@ -37,7 +37,7 @@ func (c *LoginController) Post() {
 
 	logined := models.Login(username, password)
 	if logined {
-		c.SetSession("userLogin", username+"||"+username+"||"+username)
+		c.SetSession("userLogin_funds", username+"||"+username+"||"+username)
 
 		fmt.Printf("Login successful: %s\n", username)
 
@@ -50,7 +50,7 @@ func (c *LoginController) Post() {
 
 // Logout to system
 func (c *LoginController) Logout() {
-	c.DelSession("userLogin")
+	c.DelSession("userLogin_funds")
 
 	c.Redirect("/", 302)
 	return

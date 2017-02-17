@@ -47,7 +47,7 @@ func main() {
 }
 
 var filterUser = func(ctx *context.Context) {
-	_, ok := ctx.Input.Session("userLogin").(string)
+	_, ok := ctx.Input.Session("userLogin_funds").(string)
 	if !ok && ctx.Request.RequestURI != "/login" {
 		ctx.Redirect(302, "/login")
 	}

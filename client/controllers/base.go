@@ -29,8 +29,8 @@ type BaseController struct {
 }
 
 func (this *BaseController) Prepare() {
-	userLogin := this.GetSession("userLogin")
-	if userLogin == nil {
+	userLogin_funds := this.GetSession("userLogin_funds")
+	if userLogin_funds == nil {
 		this.IsLogin = false
 		// this.Redirect("/login", 302)
 		fmt.Printf("BaseController: login=false\n")
@@ -38,7 +38,7 @@ func (this *BaseController) Prepare() {
 		fmt.Printf("BaseController: login=true\n")
 
 		this.IsLogin = true
-		tmp := strings.Split((this.GetSession("userLogin")).(string), "||")
+		tmp := strings.Split((this.GetSession("userLogin_funds")).(string), "||")
 
 		this.Data["LoginUserid"] = tmp[0]
 		this.Data["LoginUsername"] = tmp[1]
