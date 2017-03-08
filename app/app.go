@@ -149,7 +149,7 @@ func deploy() (err error) {
 		appLogger.Errorf("Failed deploying [%s]", err)
 		return
 	}
-
+	fmt.Println("````````````", string(reqBody))
 	respBody, err := doHTTPPost(restURL+"chaincode", reqBody)
 	if err != nil {
 		appLogger.Errorf("Failed deploying [%s]", err)
